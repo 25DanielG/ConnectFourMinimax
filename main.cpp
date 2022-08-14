@@ -1,9 +1,11 @@
 #include <iostream>
 #include "./hsrc/board.hpp"
+#include "./hsrc/boardgui.hpp"
 using std::endl;
 using std::cout;
 using std::cerr;
 using std::string;
+
 int main() {
     string testSequence = "4453";
     Board tmpBoard;
@@ -13,4 +15,5 @@ int main() {
     tmpBoard.computeBoard();
     cerr << "Computed Board" << endl;
     tmpBoard.printBoard();
+    output();
 }
