@@ -1,5 +1,6 @@
-add_library(connectFourBuild board.cc boardgui.cc)
+add_library(connectFourBuild board.cc boardgui.cc minmax.cc)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 find_package(SDL2 REQUIRED)
-include_directories(${SDL2_INCLUDE_DIR})
+find_package(SDL2_ttf REQUIRED)
+include_directories(${SDL2_INCLUDE_DIR} ${SDL2_TTF_INCLUDE_DIRS})
 link_libraries(${SDL2_LIBRARY} ${SDL2_TTF_LIBRARIES})

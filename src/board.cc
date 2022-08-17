@@ -15,7 +15,6 @@ void Board::computeBoard() { // Converts the board from a board sequence to a 2d
     }
     for(int i = 0; i < currentGame.length(); ++i) {
         int currentMove = currentGame[i] - '0';
-        cout << "Currentmove: " << currentMove << endl;
         if(playerOne)
             computedBoard[rowTracker[currentMove]][currentMove] = 'X';
         else
@@ -41,4 +40,22 @@ void Board::getMove() {
     std::cin >> move;
     cout << endl;
     currentGame += move;
+}
+vector<vector<char> > Board::getMatrixBoard() { // Gets the board from a game sequence to a matrix
+    vector<vector<char> > computedBoard(rows, vector<char>(columns, '#'));
+    bool playerOne = true;
+    std::map<int, int> rowTracker;
+    for(int i = 0; i < columns; ++i) {
+        rowTracker.insert(std::pair<int, int>(i, rows - 1));
+    }
+    for(int i = 0; i < currentGame.length(); ++i) {
+        int currentMove = currentGame[i] - '0';
+        if(playerOne)
+            computedBoard[rowTracker[currentMove]][currentMove] = 'X';
+        else
+            computedBoard[rowTracker[currentMove]][currentMove] = 'O';
+        --rowTracker[currentMove];
+        playerOne = !playerOne;
+    }
+    return computedBoard;
 }

@@ -1,14 +1,23 @@
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include "../hsrc/boardgui.hpp"
 #include <iostream>
 #define WIDTH 1280
 #define HEIGHT 720
-bool running, fullscreen;
+bool running, fullscreen, winner = false;
 SDL_Renderer* renderer;
 SDL_Window* window;
-int frameCount, timerFPS, lastFrame, fps;
+int frameCount = 0, timerFPS, lastFrame, fps;
 void update() {
-
+    if(fullscreen) {
+        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN);
+    }
+    if(!fullscreen) {
+        SDL_SetWindowFullscreen(window, 0);
+    }
+    if(winner) {
+        
+    }
 }
 void input() {
     SDL_Event e;
@@ -21,15 +30,26 @@ void input() {
     if(keyStates[SDL_SCANCODE_ESCAPE]) {
         running = false;
     }
+    if(keyStates[SDL_SCANCODE_F]) {
+        fullscreen = !fullscreen;
+    }
 }
 void draw() {
-    SDL_SetRenderDrawColor(renderer, 40, 43, 200, 255);
-    SDL_Rect rect;
-    rect.x = 0;
-    rect.y = 0;
-    rect.w = WIDTH;
-    rect.h = HEIGHT;
-    SDL_RenderFillRect(renderer, &rect);
+    SDL_SetRenderDrawColor(renderer, 40, 40, 200, 255);
+    SDL_Rect backRect;
+    backRect.x = 0;
+    backRect.y = 0;
+    backRect.w = WIDTH;
+    backRect.h = HEIGHT;
+    SDL_RenderFillRect(renderer, &backRect);
+    int gameBorder = 200;
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_Rect frontRect;
+    frontRect.x = gameBorder;
+    frontRect.y = gameBorder;
+    frontRect.w = WIDTH - (gameBorder * 2);
+    frontRect.h = HEIGHT - (gameBorder * 2);
+    SDL_RenderDrawRect(renderer, &frontRect);
     ++frameCount;
     int timerFPS = SDL_GetTicks() - lastFrame;
     if(timerFPS  < (1000 / 60)) {
@@ -38,11 +58,14 @@ void draw() {
     SDL_RenderPresent(renderer);
 }
 void output() {
-    std::cerr << "Inside output function" << std::endl;
     running = true;
     fullscreen = false;
+    static int lastTime = 0;
     if(SDL_Init(SDL_INIT_EVERYTHING) < 0) {
         std::cerr << "Failed at SDL_Init" << std::endl;
+    }
+    if(TTF_Init() == -1) {
+        std::cerr << "Failed at TTF_Init" << std::endl;
     }
     if(SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &renderer) < 0) {
         std::cerr << "Failed at SDL_CreateWindowAndRenderer()" << std::endl;
@@ -53,11 +76,10 @@ void output() {
     while(running) {
         lastFrame = SDL_GetTicks();
         if(lastFrame >= (lastFrame + 1000)) {
-            //lastTime = lastFrame;
+            lastTime = lastFrame;
             fps = frameCount;
             frameCount = 0;
         }
-        std::cout << "FPS: " << fps << std::endl;
         update();
         input();
         draw();
@@ -65,4 +87,5 @@ void output() {
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
     SDL_Quit();
+    TTF_Quit();
 }

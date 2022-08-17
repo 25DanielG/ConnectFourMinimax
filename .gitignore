@@ -86,3 +86,4 @@ include/*
 lib/*
 bin/*
 test/test_runner
+.vscode/c_cpp_properties.json

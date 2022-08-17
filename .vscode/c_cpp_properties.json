@@ -3,7 +3,8 @@
         {
             "name": "Mac",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/Users/danielgergov/Downloads/**"
             ],
             "defines": [],
             "macFrameworkPath": [
@@ -11,7 +12,8 @@
             ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
-            "intelliSenseMode": "macos-clang-arm64"
+            "intelliSenseMode": "macos-clang-arm64",
+            "cppStandard": "c++17"
         }
     ],
     "version": 4
