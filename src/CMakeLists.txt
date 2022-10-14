@@ -1,4 +1,4 @@
-add_library(connectFourBuild board.cc boardgui.cc minmax.cc)
+add_library(connectFourBuild board.cc boardgui.cc minmax.cc ../hsrc/treeNode.hpp)
 set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)

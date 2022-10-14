@@ -1,12 +1,58 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
+#include <string>
 #include "../hsrc/minmax.hpp"
 #include "../hsrc/board.hpp"
+#include "../hsrc/treeNode.hpp"
 using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
 using std::cerr;
+std::pair<int, int> minimax(treeNode<Board> &node, const int depth, bool maximizingPlayer, int bestValue) {
+    int cnt = -1;
+    if(depth == 0) {
+        char tmpPlayer;     
+        if(maximizingPlayer)  tmpPlayer = 'X';
+        else tmpPlayer = 'O';
+        std::pair<int, int> ret;
+        ret.first = scoreBoard(node.getValue(), tmpPlayer); ret.second = - 1;
+        return ret;
+    }
+    if(maximizingPlayer) {
+        for(treeNode<Board> x : node.getChildren()) {
+            ++cnt;
+            int compValue = (minimax(x, depth - 1, false, bestValue)).first;
+            bestValue = std::max(bestValue, compValue);
+        }
+        std::pair<int, int> ret;
+        ret.first = bestValue; ret.second = cnt;
+        return ret;
+    } else {
+        for(treeNode<Board> x : node.getChildren()) {
+            ++cnt;
+            int compValue = (minimax(x, depth - 1, true, bestValue)).first;
+            bestValue = std::min(bestValue, compValue);
+        }
+        std::pair<int, int> ret;
+        ret.first = bestValue; ret.second = cnt;
+        return ret;
+    }
+}
+void createTree(treeNode<Board> &node, const int depth) {
+    if(depth == 0) {
+        return;
+    }
+    for(int i = 0; i < 7; ++i) {
+        Board tmpBoard = node.getValue();
+        tmpBoard.currentGame += std::to_string(i);
+        treeNode<Board> newNode;
+        newNode.setValue(tmpBoard);
+        node.addChild(newNode);
+        createTree(newNode, depth - 1);
+    }
+}
 int scoreBoard(Board board, const char givenPlayer) { // Scores the current position of the board
     vector<vector<char> > computedBoard = board.getMatrixBoard();
     vector<coordDirection> arrConnectTwos = connectTwos(computedBoard, board.rows, board.columns, givenPlayer);

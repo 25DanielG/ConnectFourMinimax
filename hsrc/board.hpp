@@ -4,8 +4,8 @@
 using std::vector;
 class Board {
     public:
-        const int rows = 6;
-        const int columns = 7;
+        static const int rows = 6;
+        static const int columns = 7;
         std::string currentGame = "";
         std::vector<std::vector<char> > currentComputedBoard;
         Board() { // Constructor
