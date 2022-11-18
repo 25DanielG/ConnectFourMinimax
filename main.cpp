@@ -12,29 +12,29 @@ using std::string;
 using std::vector;
 
 int main() {
-    Board tmpBoard;
-    int depth = 4;
-    tmpBoard.currentGame = "";
+    const int depth = 4;
+    Board gameBoard;
+    gameBoard.currentGame = "";
     bool computer = false;
     while(true) {
-        tmpBoard.computeBoard();
+        gameBoard.computeBoard();
         cout << "Board:" << endl;
-        tmpBoard.printBoard();
+        gameBoard.printBoard();
         if(computer) {
-            treeNode<Board> tree; 
-            tree.setValue(tmpBoard);
+            treeNode<Board> tree;
+            tree.setValue(gameBoard);
             createTree(tree, depth);
             cerr << "Created tree and entered minimax" << endl;
             int nextMove = (minimax(tree, depth, true, INT32_MIN)).second;
             cerr << "Return of minimax: " << nextMove << endl;
-            tmpBoard.currentGame += std::to_string(nextMove);
-            cerr << "Current game is: " << tmpBoard.currentGame << endl;
+            gameBoard.currentGame += std::to_string(nextMove);
+            cerr << "Current game is: " << gameBoard.currentGame << endl;
         } else {
             cout << "Enter a column to move in: ";
             int columnMove;
             std::cin >> columnMove;
-            tmpBoard.currentGame += std::to_string(columnMove);
-            cerr << "Current game is: " << tmpBoard.currentGame << endl;
+            gameBoard.currentGame += std::to_string(columnMove);
+            cerr << "Current game is: " << gameBoard.currentGame << endl;
         }
         computer = !computer;
     }

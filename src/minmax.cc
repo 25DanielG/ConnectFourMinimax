@@ -40,7 +40,7 @@ std::pair<int, int> minimax(treeNode<Board> &node, const int depth, bool maximiz
         return ret;
     }
 }
-void createTree(treeNode<Board> &node, const int depth) {
+void createTree(treeNode<Board> node, const int depth) {
     if(depth == 0) {
         return;
     }
@@ -68,7 +68,7 @@ int scoreBoard(Board board, const char givenPlayer) { // Scores the current posi
     score += numInCenter;
     score += numConnectTwo * 2;
     score += numConnectThree * 4;
-    score += numPossibleWins * 1000;
+    score += numPossibleWins * 100;
     return score;
 }
 vector<coordDirection> connectTwos(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer) { // Returns a vector of coordinates each describing the start of a connect two

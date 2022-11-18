@@ -9,7 +9,7 @@ struct coordDirection {
     std::string direction;
 };
 std::pair<int, int> minimax(treeNode<Board> &node, const int depth, bool maximizingPlayer, int bestValue); // Minimax function
-void createTree(treeNode<Board> &node, const int depth); // Creates the tree containing all possible moves to a specified depth
+void createTree(treeNode<Board> node, const int depth); // Creates the tree containing all possible moves to a specified depth
 int scoreBoard(Board board, const char givenPlayer); // Scores the current position of the board
 vector<coordDirection> connectTwos(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer); // Returns a vector of coordinates each describing the start of a connect two
 vector<coordDirection> findConnectThrees(vector<vector<char> > board, vector<coordDirection> connectTwos, const int rows, const int columns, const char givenPlayer); // Returns a vector of all the connect threes using the connect twos & directions found from the connect twos function
