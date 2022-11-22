@@ -10,7 +10,7 @@ template <class T> class treeNode {
 		treeNode(const T& t) {
 			this->t = t;
 		}
-		void addChild(treeNode<T>& toAdd) {
+		void addChild(treeNode<T>* toAdd) {
 			this->children.push_back(toAdd);
 		}
 		void setValue(const T& t) {
@@ -19,11 +19,14 @@ template <class T> class treeNode {
 		T& getValue() {
 			return this->t;
 		}
-		std::vector<treeNode>& getChildren() {
+		T getCopy() {
+			return this->t;
+		}
+		std::vector<treeNode*> getChildren() {
 			return this->children;
 		}
 	private:
 		T t;
-		std::vector<treeNode> children;
+		std::vector<treeNode*> children;
 };
 #endif

@@ -21,11 +21,8 @@ int main() {
         cout << "Board:" << endl;
         gameBoard.printBoard();
         if(computer) {
-            treeNode<Board> tree;
-            tree.setValue(gameBoard);
-            createTree(tree, depth);
-            cerr << "Created tree and entered minimax" << endl;
-            int nextMove = (minimax(tree, depth, true, INT32_MIN)).second;
+            cerr << endl << "Entered minimax" << endl;
+            int nextMove = minimax(gameBoard, depth, true, INT32_MIN).second;
             cerr << "Return of minimax: " << nextMove << endl;
             gameBoard.currentGame += std::to_string(nextMove);
             cerr << "Current game is: " << gameBoard.currentGame << endl;

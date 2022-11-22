@@ -6,9 +6,11 @@ class Board {
     public:
         static const int rows = 6;
         static const int columns = 7;
-        std::string currentGame = "";
+        std::string currentGame;
         std::vector<std::vector<char> > currentComputedBoard;
-        Board() { } // Constructor
+        Board() { // Constructor
+            currentGame = "";
+        }
         void computeBoard(); // Converts the board from a board sequence to a 2d array
         void printBoard(); // Prints the board given the 2d board array
         void getMove(); // Gets the move from the player
