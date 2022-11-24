@@ -18,6 +18,11 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer)
     updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
     if(maximizingPlayer) {
         ret.first = INT32_MIN;
+        auto isWin = aboutToWin(board, 'X');
+        if(isWin.first) {
+            ret.second = isWin.second[0];
+            return ret;
+        }
         for(unsigned int i = 0; i < 7; ++i) {
             if(!canUpdateBoard(board.currentGame, i)) continue;
             updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
@@ -29,6 +34,11 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer)
         }
     } else {
         ret.first = INT32_MAX;
+        auto isWin = aboutToWin(board, 'O');
+        if(isWin.first) {
+            ret.second = isWin.second[0];
+            return ret;
+        }
         for(unsigned int i = 0; i < 7; ++i) {
             if(!canUpdateBoard(board.currentGame, i)) continue;
             updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
@@ -40,6 +50,16 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer)
         }
     }
     return ret;
+}
+std::pair<bool, vector<int> > aboutToWin(Board board, char givenPlayer) {
+    vector<vector<char> > matrix = board.getMatrixBoard();
+    vector<coordDirection> twos = connectTwos(matrix, board.rows, board.columns, givenPlayer);
+    vector<coordDirection> threes = findConnectThrees(matrix, twos, board.rows, board.columns, givenPlayer);
+    vector<winInfo> wins = possibleWin(matrix, threes, board.rows, board.columns, givenPlayer);
+    vector<int> cols;
+    for(winInfo w : wins)
+        cols.push_back(w.winCol);
+    return std::make_pair(wins.size() > 0, cols);
 }
 int getScore(Board board, const char givenPlayer) {
     char oppPlayer = givenPlayer == 'X' ? 'O' : 'X';
@@ -54,9 +74,9 @@ int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) {
     vector<coordDirection> arrConnectThrees = findConnectThrees(computedBoard, arrConnectTwos, board.rows, board.columns, assignedPlayer);
     int numConnectThree = arrConnectThrees.size();
     int numInCenter = countCenter(computedBoard, board.rows, board.columns, assignedPlayer);
-    vector<coordDirection> possibleWins = possibleWin(computedBoard, arrConnectThrees, board.rows, board.columns, assignedPlayer);
+    vector<winInfo> possibleWins = possibleWin(computedBoard, arrConnectThrees, board.rows, board.columns, assignedPlayer);
     int numPossibleWins = possibleWins.size();
-    // cout << "ConnectTwos: " << numConnectTwo << " ConnectThrees: " << numConnectThree << " CenterPieces: " << numInCenter << " Possible wins: " << numPossibleWins << endl;
+    // cerr << "ConnectTwos: " << numConnectTwo << " ConnectThrees: " << numConnectThree << " CenterPieces: " << numInCenter << " Possible wins: " << numPossibleWins << endl;
     // Calculate final score
     int score = 0;
     score += numInCenter;
@@ -225,10 +245,12 @@ bool containedConnect(coordDirection connected, bool type, vector<vector<char> >
     }
     return true;
 }
-vector<coordDirection> possibleWin(vector<vector<char> > board, vector<coordDirection> connectThrees, const int rows, const int columns, const char givenPlayer) { // Finds a possible win
-    vector<coordDirection> arrWins;
+vector<winInfo> possibleWin(vector<vector<char> > board, vector<coordDirection> connectThrees, const int rows, const int columns, const char givenPlayer) { // Finds a possible win
+    vector<winInfo> arrWins;
+    winInfo ret;
     for(coordDirection singleCD : connectThrees) {
         bool checkOrigin = true, checkExtreme = true;
+        ret.coords = singleCD;
         if(singleCD.direction == "down_left") {
             if(singleCD.coordinate.first == 0 || singleCD.coordinate.second == columns - 1 // Origin bound
                 || board[singleCD.coordinate.first - 1][singleCD.coordinate.second + 1] != '#') {
@@ -240,12 +262,14 @@ vector<coordDirection> possibleWin(vector<vector<char> > board, vector<coordDire
             }
             if(checkOrigin) {
                 if(board[singleCD.coordinate.first][singleCD.coordinate.second + 1] != '#') {
-                    arrWins.push_back(singleCD);
+                    ret.winCol = singleCD.coordinate.second + 1;
+                    arrWins.push_back(ret);
                 }
             }
             if(checkExtreme) {
-                if(singleCD.coordinate.first + 3 == rows - 1 || board[singleCD.coordinate.first + 4][singleCD.coordinate.second - 3] != '#') {
-                    arrWins.push_back(singleCD);
+                if(singleCD.coordinate.first + 4 == rows - 1 || board[singleCD.coordinate.first + 4][singleCD.coordinate.second - 3] != '#') {
+                    ret.winCol = singleCD.coordinate.second - 3;
+                    arrWins.push_back(ret);
                 }
             }
         } else if(singleCD.direction == "down") {
@@ -253,7 +277,8 @@ vector<coordDirection> possibleWin(vector<vector<char> > board, vector<coordDire
                 continue;
             }
             if(board[singleCD.coordinate.first - 1][singleCD.coordinate.second] == '#') {
-                arrWins.push_back(singleCD);
+                ret.winCol = singleCD.coordinate.second;
+                arrWins.push_back(ret);
             }
         } else if(singleCD.direction == "down_right") {
             if(singleCD.coordinate.first == 0 || singleCD.coordinate.second == 0 // Origin bound
@@ -266,12 +291,14 @@ vector<coordDirection> possibleWin(vector<vector<char> > board, vector<coordDire
             }
             if(checkOrigin) {
                 if(board[singleCD.coordinate.first][singleCD.coordinate.second - 1] != '#') {
-                    arrWins.push_back(singleCD);
+                    ret.winCol = singleCD.coordinate.second - 1;
+                    arrWins.push_back(ret);
                 }
             }
             if(checkExtreme) {
                 if(singleCD.coordinate.first + 3 == rows - 1 || board[singleCD.coordinate.first + 4][singleCD.coordinate.second + 3] != '#') {
-                    arrWins.push_back(singleCD);
+                    ret.winCol = singleCD.coordinate.second + 3;
+                    arrWins.push_back(ret);
                 }
             }
         } else { // Right
@@ -283,12 +310,14 @@ vector<coordDirection> possibleWin(vector<vector<char> > board, vector<coordDire
             }
             if(checkOrigin) {
                 if(singleCD.coordinate.first == rows - 1 || board[singleCD.coordinate.first + 1][singleCD.coordinate.second - 1] != '#') {
-                    arrWins.push_back(singleCD);
+                    ret.winCol = singleCD.coordinate.second - 1;
+                    arrWins.push_back(ret);
                 }
             }
             if(checkExtreme) {
                 if(singleCD.coordinate.first == rows - 1 || board[singleCD.coordinate.first + 1][singleCD.coordinate.second + 3] != '#') {
-                    arrWins.push_back(singleCD);
+                    ret.winCol = singleCD.coordinate.second + 3;
+                    arrWins.push_back(ret);
                 }
             }
         }

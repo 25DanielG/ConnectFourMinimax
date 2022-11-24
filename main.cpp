@@ -12,8 +12,7 @@ using std::vector;
 
 int main() {
     const int depth = 4;
-    Board gameBoard;
-    gameBoard.currentGame = "";
+    Board gameBoard; // Declare board
     bool computer = false;
     while(true) {
         gameBoard.computeBoard();
