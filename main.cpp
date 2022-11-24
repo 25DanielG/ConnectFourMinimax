@@ -18,10 +18,11 @@ int main() {
         gameBoard.computeBoard();
         cout << "Board:" << endl;
         gameBoard.printBoard();
-        if(isGameDone(gameBoard, 'X')) {
+        vector<vector<char> > matrix = gameBoard.getMatrixBoard();
+        if(isGameDone(matrix, 'X').size() > 0) {
             cout << "You Win!" << endl;
             break;
-        } else if(isGameDone(gameBoard, 'O')) {
+        } else if(isGameDone(matrix, 'O').size() > 0) {
             cout << "You Lose!" << endl;
             break;
         }

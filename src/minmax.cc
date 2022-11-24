@@ -61,12 +61,12 @@ std::pair<bool, vector<int> > aboutToWin(Board board, char givenPlayer) {
         cols.push_back(w.winCol);
     return std::make_pair(wins.size() > 0, cols);
 }
-bool isGameDone(Board board, char givenPlayer) {
-    vector<vector<char> > matrix = board.getMatrixBoard();
-    vector<coordDirection> twos = connectTwos(matrix, board.rows, board.columns, givenPlayer);
-    vector<coordDirection> threes = findConnectThrees(matrix, twos, board.rows, board.columns, givenPlayer);
-    vector<coordDirection> wins = findConnectFours(matrix, threes, board.rows, board.columns, givenPlayer);
-    return wins.size() > 0;
+vector<coordDirection> isGameDone(vector<vector<char> > &matrix, const char givenPlayer) {
+    int rows = matrix.size(), columns = matrix[0].size();
+    vector<coordDirection> twos = connectTwos(matrix, rows, columns, givenPlayer);
+    vector<coordDirection> threes = findConnectThrees(matrix, twos, rows, columns, givenPlayer);
+    vector<coordDirection> wins = findConnectFours(matrix, threes, rows, columns, givenPlayer);
+    return wins;
 }
 int getScore(Board board, const char givenPlayer) {
     char oppPlayer = givenPlayer == 'X' ? 'O' : 'X';
@@ -252,78 +252,20 @@ bool containedConnect(coordDirection connected, bool type, vector<vector<char> >
     }
     return true;
 }
-vector<winInfo> possibleWin(const vector<vector<char> > &board, const vector<coordDirection> &connectThrees, const int rows, const int columns, const char givenPlayer) { // Finds a possible win
+vector<winInfo> possibleWin(const vector<vector<char> > board, const vector<coordDirection> &connectThrees, const int rows, const int columns, const char givenPlayer) { // Finds a possible win
     vector<winInfo> arrWins;
-    winInfo ret;
-    for(coordDirection singleCD : connectThrees) {
-        bool checkOrigin = true, checkExtreme = true;
-        ret.coords = singleCD;
-        if(singleCD.direction == "down_left") {
-            if(singleCD.coordinate.first == 0 || singleCD.coordinate.second == columns - 1 // Origin bound
-                || board[singleCD.coordinate.first - 1][singleCD.coordinate.second + 1] != '#') {
-                checkOrigin = false;
-            }
-            if (singleCD.coordinate.first >= rows - 3 || singleCD.coordinate.second <= 2 // Extreme bound
-                || board[singleCD.coordinate.first + 3][singleCD.coordinate.second - 3] != '#') {
-                checkExtreme = false;
-            }
-            if(checkOrigin) {
-                if(board[singleCD.coordinate.first][singleCD.coordinate.second + 1] != '#') {
-                    ret.winCol = singleCD.coordinate.second + 1;
-                    arrWins.push_back(ret);
-                }
-            }
-            if(checkExtreme) {
-                if(singleCD.coordinate.first + 4 == rows - 1 || board[singleCD.coordinate.first + 4][singleCD.coordinate.second - 3] != '#') {
-                    ret.winCol = singleCD.coordinate.second - 3;
-                    arrWins.push_back(ret);
-                }
-            }
-        } else if(singleCD.direction == "down") {
-            if(singleCD.coordinate.first == 0) { // Origin bound (no extreme bound)
-                continue;
-            }
-            if(board[singleCD.coordinate.first - 1][singleCD.coordinate.second] == '#') {
-                ret.winCol = singleCD.coordinate.second;
-                arrWins.push_back(ret);
-            }
-        } else if(singleCD.direction == "down_right") {
-            if(singleCD.coordinate.first == 0 || singleCD.coordinate.second == 0 // Origin bound
-                || board[singleCD.coordinate.first - 1][singleCD.coordinate.second - 1] != '#') {
-                checkOrigin = false;
-            }
-            if(singleCD.coordinate.first >= rows - 3 || singleCD.coordinate.second >= columns - 3 // Extreme bound
-                || board[singleCD.coordinate.first + 3][singleCD.coordinate.second + 3] != '#') {
-                checkExtreme = false;
-            }
-            if(checkOrigin) {
-                if(board[singleCD.coordinate.first][singleCD.coordinate.second - 1] != '#') {
-                    ret.winCol = singleCD.coordinate.second - 1;
-                    arrWins.push_back(ret);
-                }
-            }
-            if(checkExtreme) {
-                if(singleCD.coordinate.first + 3 == rows - 1 || board[singleCD.coordinate.first + 4][singleCD.coordinate.second + 3] != '#') {
-                    ret.winCol = singleCD.coordinate.second + 3;
-                    arrWins.push_back(ret);
-                }
-            }
-        } else { // Right
-            if(singleCD.coordinate.second == 0 || board[singleCD.coordinate.first][singleCD.coordinate.second - 1] != '#') { // Origin bounds
-                checkOrigin = false;
-            }
-            if(singleCD.coordinate.second >= columns - 3 || board[singleCD.coordinate.first][singleCD.coordinate.second + 3] != '#') { // Extreme bounds
-                checkExtreme = false;
-            }
-            if(checkOrigin) {
-                if(singleCD.coordinate.first == rows - 1 || board[singleCD.coordinate.first + 1][singleCD.coordinate.second - 1] != '#') {
-                    ret.winCol = singleCD.coordinate.second - 1;
-                    arrWins.push_back(ret);
-                }
-            }
-            if(checkExtreme) {
-                if(singleCD.coordinate.first == rows - 1 || board[singleCD.coordinate.first + 1][singleCD.coordinate.second + 3] != '#') {
-                    ret.winCol = singleCD.coordinate.second + 3;
+    vector<vector<char> > testBoard = board;
+    for(int i = 0; i < rows; ++i) {
+        for(int j = 0; j < columns; ++j) {
+            testBoard = board;
+            if(testBoard[i][j] != '#') continue;
+            testBoard[i][j] = givenPlayer;
+            vector<coordDirection> oneWins = isGameDone(testBoard, givenPlayer);
+            if(oneWins.size() > 0) {
+                for(coordDirection x : oneWins) {
+                    winInfo ret;
+                    ret.coords = x;
+                    ret.winCol = j;
                     arrWins.push_back(ret);
                 }
             }
