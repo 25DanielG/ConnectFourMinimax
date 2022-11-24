@@ -61,6 +61,13 @@ std::pair<bool, vector<int> > aboutToWin(Board board, char givenPlayer) {
         cols.push_back(w.winCol);
     return std::make_pair(wins.size() > 0, cols);
 }
+bool isGameDone(Board board, char givenPlayer) {
+    vector<vector<char> > matrix = board.getMatrixBoard();
+    vector<coordDirection> twos = connectTwos(matrix, board.rows, board.columns, givenPlayer);
+    vector<coordDirection> threes = findConnectThrees(matrix, twos, board.rows, board.columns, givenPlayer);
+    vector<coordDirection> wins = findConnectFours(matrix, threes, board.rows, board.columns, givenPlayer);
+    return wins.size() > 0;
+}
 int getScore(Board board, const char givenPlayer) {
     char oppPlayer = givenPlayer == 'X' ? 'O' : 'X';
     int fScore = scoreBoard(board, givenPlayer, givenPlayer);
@@ -88,7 +95,7 @@ int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) {
         score += numPossibleWins * 100;
     return score;
 }
-vector<coordDirection> connectTwos(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer) { // Returns a vector of coordinates each describing the start of a connect two
+vector<coordDirection> connectTwos(const vector<vector<char> > &board, const int rows, const int columns, const char givenPlayer) { // Returns a vector of coordinates each describing the start of a connect two
     vector<coordDirection> arrCoords;
     coordDirection tmpRet;
     for(int i = 0; i < rows; ++i) {
@@ -169,7 +176,7 @@ vector<coordDirection> connectTwos(vector<vector<char> > board, const int rows, 
     }
     return arrCoords;
 }
-vector<coordDirection> findConnectThrees(vector<vector<char> > board, vector<coordDirection> connectTwos, const int rows, const int columns, const char givenPlayer) { // Returns a vector of all the connect threes using the connect twos & directions found from the connect twos function
+vector<coordDirection> findConnectThrees(const vector<vector<char> > &board, const vector<coordDirection> &connectTwos, const int rows, const int columns, const char givenPlayer) { // Returns a vector of all the connect threes using the connect twos & directions found from the connect twos function
     vector<coordDirection> arrRet;
     std::pair<int, int> tmpCoord;
     for(coordDirection singleCD : connectTwos) {
@@ -245,7 +252,7 @@ bool containedConnect(coordDirection connected, bool type, vector<vector<char> >
     }
     return true;
 }
-vector<winInfo> possibleWin(vector<vector<char> > board, vector<coordDirection> connectThrees, const int rows, const int columns, const char givenPlayer) { // Finds a possible win
+vector<winInfo> possibleWin(const vector<vector<char> > &board, const vector<coordDirection> &connectThrees, const int rows, const int columns, const char givenPlayer) { // Finds a possible win
     vector<winInfo> arrWins;
     winInfo ret;
     for(coordDirection singleCD : connectThrees) {
@@ -323,6 +330,84 @@ vector<winInfo> possibleWin(vector<vector<char> > board, vector<coordDirection> 
         }
     }
     return arrWins;
+}
+vector<coordDirection> findConnectFours(const vector<vector<char> > &board, const vector<coordDirection> &connectThrees, const int rows, const int columns, const char givenPlayer) { // Finds wins in the board
+    vector<coordDirection> wins;
+    for(coordDirection singleCD : connectThrees) {
+        if(singleCD.direction == "down_left") {
+            /*if(singleCD.coordinate.first == 0 || singleCD.coordinate.second == columns - 1 // Origin bound
+                || board[singleCD.coordinate.first - 1][singleCD.coordinate.second + 1] != givenPlayer) {
+                continue;
+            }*/
+            if (singleCD.coordinate.first >= rows - 3 || singleCD.coordinate.second <= 2) { // Extreme bound
+                continue;
+            }
+            /*if(board[singleCD.coordinate.first - 1][singleCD.coordinate.second + 1] == givenPlayer) {
+                coordDirection ret = singleCD;
+                ret.coordinate = std::make_pair(singleCD.coordinate.first - 1, singleCD.coordinate.second + 1);
+                wins.push_back(ret);
+            }*/
+            if(board[singleCD.coordinate.first + 3][singleCD.coordinate.second - 3] == givenPlayer) {
+                coordDirection ret = singleCD;
+                ret.coordinate = std::make_pair(singleCD.coordinate.first, singleCD.coordinate.second);
+                wins.push_back(ret);
+            }
+        } else if(singleCD.direction == "down") {
+            /*if(singleCD.coordinate.first == 0) { // Origin bound (no extreme bound)
+                continue;
+            }
+            if(board[singleCD.coordinate.first - 1][singleCD.coordinate.second] == '#') {
+                ret.winCol = singleCD.coordinate.second;
+                arrWins.push_back(ret);
+            }*/
+            if(singleCD.coordinate.first > rows - 4) {
+                continue;
+            }
+            if(board[singleCD.coordinate.first + 3][singleCD.coordinate.second] == givenPlayer) {
+                coordDirection ret = singleCD;
+                ret.coordinate = std::make_pair(singleCD.coordinate.first, singleCD.coordinate.second);
+                wins.push_back(ret);
+            }
+        } else if(singleCD.direction == "down_right") {
+            /*if(singleCD.coordinate.first == 0 || singleCD.coordinate.second == 0 // Origin bound
+                || board[singleCD.coordinate.first - 1][singleCD.coordinate.second - 1] != '#') {
+                continue;
+            }*/
+            if(singleCD.coordinate.first >= rows - 3 || singleCD.coordinate.second >= columns - 3) { // Extreme bound
+                continue;
+            }
+            /*if(checkOrigin) {
+                if(board[singleCD.coordinate.first][singleCD.coordinate.second - 1] != '#') {
+                    ret.winCol = singleCD.coordinate.second - 1;
+                    arrWins.push_back(ret);
+                }
+            }*/
+            if(board[singleCD.coordinate.first + 3][singleCD.coordinate.second + 3] == givenPlayer) {
+                coordDirection ret = singleCD;
+                ret.coordinate = std::make_pair(singleCD.coordinate.first, singleCD.coordinate.second);
+                wins.push_back(ret);
+            }
+        } else { // Right
+            /*if(singleCD.coordinate.second == 0 || board[singleCD.coordinate.first][singleCD.coordinate.second - 1] != '#') { // Origin bounds
+                checkOrigin = false;
+            }*/
+            if(singleCD.coordinate.second >= columns - 3) { // Extreme bounds
+                continue;
+            }
+            /*if(checkOrigin) {
+                if(singleCD.coordinate.first == rows - 1 || board[singleCD.coordinate.first + 1][singleCD.coordinate.second - 1] != '#') {
+                    ret.winCol = singleCD.coordinate.second - 1;
+                    arrWins.push_back(ret);
+                }
+            }*/
+            if(board[singleCD.coordinate.first][singleCD.coordinate.second + 3] == givenPlayer) {
+                coordDirection ret = singleCD;
+                ret.coordinate = std::make_pair(singleCD.coordinate.first, singleCD.coordinate.second);
+                wins.push_back(ret);
+            }
+        }
+    }
+    return wins;
 }
 bool canUpdateBoard(const string game, const int toUpdate) {
     char toChar = toUpdate + '0';

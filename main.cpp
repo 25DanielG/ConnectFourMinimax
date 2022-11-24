@@ -11,15 +11,21 @@ using std::string;
 using std::vector;
 
 int main() {
-    const int depth = 4;
+    const int depth = 5;
     Board gameBoard; // Declare board
     bool computer = false;
     while(true) {
         gameBoard.computeBoard();
         cout << "Board:" << endl;
         gameBoard.printBoard();
+        if(isGameDone(gameBoard, 'X')) {
+            cout << "You Win!" << endl;
+            break;
+        } else if(isGameDone(gameBoard, 'O')) {
+            cout << "You Lose!" << endl;
+            break;
+        }
         if(computer) {
-            cerr << endl << "Entered minimax" << endl;
             int nextMove = minimax(gameBoard, depth, true).second;
             cerr << "Return of minimax: " << nextMove << endl;
             gameBoard.currentGame += std::to_string(nextMove);
