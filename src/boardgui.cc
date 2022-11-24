@@ -35,20 +35,20 @@ void input() {
     }
 }
 void draw() {
-    SDL_SetRenderDrawColor(renderer, 40, 40, 200, 255);
+    SDL_SetRenderDrawColor(renderer, 40, 40, 200, 255); // Background
     SDL_Rect backRect;
     backRect.x = 0;
     backRect.y = 0;
     backRect.w = WIDTH;
     backRect.h = HEIGHT;
     SDL_RenderFillRect(renderer, &backRect);
-    int gameBorder = 200;
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    int gameBorder = 100;
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Rectangle
     SDL_Rect frontRect;
     frontRect.x = gameBorder;
     frontRect.y = gameBorder;
     frontRect.w = WIDTH - (gameBorder * 2);
-    frontRect.h = HEIGHT - (gameBorder * 2);
+    frontRect.h = HEIGHT - (gameBorder * 1.5);
     SDL_RenderDrawRect(renderer, &frontRect);
     ++frameCount;
     int timerFPS = SDL_GetTicks() - lastFrame;

@@ -4,60 +4,68 @@
 #include <string>
 #include "../hsrc/minmax.hpp"
 #include "../hsrc/board.hpp"
-#include "../hsrc/treeNode.hpp"
 using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
 using std::cerr;
-std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int bestValue) {
-    int cnt = -1;
-    if(depth == 0) {
-        char tmpPlayer = maximizingPlayer ? 'X' : 'O';
-        std::pair<int, int> ret;
-        ret.first = scoreBoard(board, tmpPlayer); ret.second = - 1;
-        return ret;
-    }
+std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer) {
+    if(depth == 0)
+        return std::make_pair(getScore(board, 'X'), -1);
     Board updated = board;
+    std::pair<int, int> ret;
+    ret.second = -1;
+    updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
     if(maximizingPlayer) {
-        for(int i = 0; i < 7; ++i) {
-            updated.currentGame += i + "";
-            ++cnt;
-            int compValue = (minimax(updated, depth - 1, false, bestValue)).first;
-            bestValue = std::max(bestValue, compValue);
+        ret.first = INT32_MIN;
+        for(unsigned int i = 0; i < 7; ++i) {
+            if(!canUpdateBoard(board.currentGame, i)) continue;
+            updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
+            int compValue = (minimax(updated, depth - 1, false)).first;
+            if(compValue >= ret.first) {
+                ret.first = compValue;
+                ret.second = i;
+            }
         }
-        std::pair<int, int> ret;
-        ret.first = bestValue; ret.second = cnt;
-        return ret;
     } else {
-        for(int i = 0; i < 7; ++i) {
-            updated.currentGame += i + "";
-            ++cnt;
-            int compValue = (minimax(updated, depth - 1, true, bestValue)).first;
-            bestValue = std::min(bestValue, compValue);
+        ret.first = INT32_MAX;
+        for(unsigned int i = 0; i < 7; ++i) {
+            if(!canUpdateBoard(board.currentGame, i)) continue;
+            updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
+            int compValue = (minimax(updated, depth - 1, true)).first;
+            if(compValue <= ret.first) {
+                ret.first = compValue;
+                ret.second = i;
+            }
         }
-        std::pair<int, int> ret;
-        ret.first = bestValue; ret.second = cnt;
-        return ret;
     }
+    return ret;
 }
-int scoreBoard(Board board, const char givenPlayer) { // Scores the current position of the board
-    board.computeBoard();
+int getScore(Board board, const char givenPlayer) {
+    char oppPlayer = givenPlayer == 'X' ? 'O' : 'X';
+    int fScore = scoreBoard(board, givenPlayer, givenPlayer);
+    int sScore = scoreBoard(board, givenPlayer, oppPlayer);
+    return fScore - sScore;
+}
+int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) { // Scores the current position of the board
     vector<vector<char> > computedBoard = board.getMatrixBoard();
-    vector<coordDirection> arrConnectTwos = connectTwos(computedBoard, board.rows, board.columns, givenPlayer);
+    vector<coordDirection> arrConnectTwos = connectTwos(computedBoard, board.rows, board.columns, assignedPlayer);
     int numConnectTwo = arrConnectTwos.size();
-    vector<coordDirection> arrConnectThrees = findConnectThrees(computedBoard, arrConnectTwos, board.rows, board.columns, givenPlayer);
+    vector<coordDirection> arrConnectThrees = findConnectThrees(computedBoard, arrConnectTwos, board.rows, board.columns, assignedPlayer);
     int numConnectThree = arrConnectThrees.size();
-    int numInCenter = countCenter(computedBoard, board.rows, board.columns, givenPlayer);
-    vector<coordDirection> possibleWins = possibleWin(computedBoard, arrConnectThrees, board.rows, board.columns, givenPlayer);
+    int numInCenter = countCenter(computedBoard, board.rows, board.columns, assignedPlayer);
+    vector<coordDirection> possibleWins = possibleWin(computedBoard, arrConnectThrees, board.rows, board.columns, assignedPlayer);
     int numPossibleWins = possibleWins.size();
-    cout << "ConnectTwos: " << numConnectTwo << " ConnectThrees: " << numConnectThree << " CenterPieces: " << numInCenter << " Possible wins: " << numPossibleWins << endl;
+    // cout << "ConnectTwos: " << numConnectTwo << " ConnectThrees: " << numConnectThree << " CenterPieces: " << numInCenter << " Possible wins: " << numPossibleWins << endl;
     // Calculate final score
     int score = 0;
     score += numInCenter;
     score += numConnectTwo * 2;
     score += numConnectThree * 4;
-    score += numPossibleWins * 100;
+    if(givenPlayer == assignedPlayer)
+        score += numPossibleWins * 10000;
+    else
+        score += numPossibleWins * 100;
     return score;
 }
 vector<coordDirection> connectTwos(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer) { // Returns a vector of coordinates each describing the start of a connect two
@@ -185,7 +193,6 @@ vector<coordDirection> findConnectThrees(vector<vector<char> > board, vector<coo
 }
 int countCenter(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer) { // Counts the number of pieces in the center of the board
     const int colToSearch = (columns / 2);
-    cout << "ColToSearch: " << colToSearch << endl;
     int cnt = 0;
     for(int i = 0; i < rows; ++i) {
         if(board[i][colToSearch] == givenPlayer) {
@@ -287,4 +294,13 @@ vector<coordDirection> possibleWin(vector<vector<char> > board, vector<coordDire
         }
     }
     return arrWins;
+}
+bool canUpdateBoard(const string game, const int toUpdate) {
+    char toChar = toUpdate + '0';
+    int cnt = 0;
+    for(int i = 0; i < game.length(); ++i) {
+        if(game.at(i) == toChar)
+            ++cnt;
+    }
+    return cnt < 6;
 }

@@ -4,7 +4,6 @@
 #include "./hsrc/board.hpp"
 #include "./hsrc/boardgui.hpp"
 #include "./hsrc/minmax.hpp"
-#include "./hsrc/treeNode.hpp"
 using std::endl;
 using std::cout;
 using std::cerr;
@@ -22,7 +21,7 @@ int main() {
         gameBoard.printBoard();
         if(computer) {
             cerr << endl << "Entered minimax" << endl;
-            int nextMove = minimax(gameBoard, depth, true, INT32_MIN).second;
+            int nextMove = minimax(gameBoard, depth, true).second;
             cerr << "Return of minimax: " << nextMove << endl;
             gameBoard.currentGame += std::to_string(nextMove);
             cerr << "Current game is: " << gameBoard.currentGame << endl;
@@ -35,5 +34,5 @@ int main() {
         }
         computer = !computer;
     }
-    //output(); Call graphics
+    // output(); // Call graphics
 }
