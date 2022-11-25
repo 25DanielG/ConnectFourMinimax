@@ -11,8 +11,10 @@ using std::string;
 using std::vector;
 
 int main() {
-    const int depth = 5;
+    const int depth = 8;
     Board gameBoard; // Declare board
+    // gameBoard.currentGame = "3541164636665504330416110034";
+    // gameBoard.currentGame = "303130";
     bool computer = false;
     while(true) {
         gameBoard.computeBoard();
@@ -27,7 +29,7 @@ int main() {
             break;
         }
         if(computer) {
-            int nextMove = minimax(gameBoard, depth, true).second;
+            int nextMove = minimax(gameBoard, depth, true, INT32_MIN, INT32_MAX).second;
             cerr << "Return of minimax: " << nextMove << endl;
             gameBoard.currentGame += std::to_string(nextMove);
             cerr << "Current game is: " << gameBoard.currentGame << endl;
