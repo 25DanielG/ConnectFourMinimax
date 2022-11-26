@@ -4,13 +4,43 @@
 #include <string>
 #include "../hsrc/minmax.hpp"
 #include "../hsrc/board.hpp"
+#include "../hsrc/boardgui.hpp"
+#define depth 9
 using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
 using std::cerr;
-std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta) {
-    if(depth == 0)
+bool computer = false;
+void performMove(Board gameBoard) {
+    gameBoard.computeBoard();
+    cout << "Board:" << endl;
+    gameBoard.printBoard();
+    vector<vector<char> > matrix = gameBoard.getMatrixBoard();
+    if(isGameDone(matrix, 'X').size() > 0) {
+        cout << "You Win!" << endl;
+        return;
+    } else if(isGameDone(matrix, 'O').size() > 0) {
+        cout << "You Lose!" << endl;
+        return;
+    }
+    if(computer) {
+        int nextMove = minimax(gameBoard, depth, true, INT32_MIN, INT32_MAX).second;
+        cerr << "Return of minimax: " << nextMove << endl;
+        gameBoard.currentGame += std::to_string(nextMove);
+        cerr << "Current game is: " << gameBoard.currentGame << endl;
+    } else {
+        cout << "Enter a column to move in: ";
+        int columnMove;
+        std::cin >> columnMove;
+        gameBoard.currentGame += std::to_string(columnMove);
+        cerr << "Current game is: " << gameBoard.currentGame << endl;
+    }
+    computer = !computer;
+    updateBoard(gameBoard);
+}
+std::pair<int, int> minimax(Board board, const int d, bool maximizingPlayer, int alpha, int beta) {
+    if(d == 0)
         return std::make_pair(getScore(board, 'X'), -1);
     Board updated = board;
     std::pair<int, int> ret;
@@ -31,7 +61,7 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
         for(unsigned int i = 0; i < 7; ++i) {
             if(!canUpdateBoard(board.currentGame, i)) continue;
             updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-            int compValue = (minimax(updated, depth - 1, false, alpha, beta)).first;
+            int compValue = (minimax(updated, d - 1, false, alpha, beta)).first;
             if(compValue >= ret.first) {
                 ret.first = compValue;
                 ret.second = i;
@@ -54,7 +84,7 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
         for(unsigned int i = 0; i < 7; ++i) {
             if(!canUpdateBoard(board.currentGame, i)) continue;
             updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-            int compValue = (minimax(updated, depth - 1, true, alpha, beta)).first;
+            int compValue = (minimax(updated, d - 1, true, alpha, beta)).first;
             if(compValue <= ret.first) {
                 ret.first = compValue;
                 ret.second = i;

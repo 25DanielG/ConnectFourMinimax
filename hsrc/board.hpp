@@ -1,6 +1,7 @@
 #ifndef BOARD_HPP_
 #define BOARD_HPP_
 #include <vector>
+#include <string>
 using std::vector;
 class Board {
     public:

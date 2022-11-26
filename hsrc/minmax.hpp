@@ -1,7 +1,9 @@
 #ifndef MINMAX_HPP_
 #define MINMAX_HPP_
 #include <vector>
+#include <iostream>
 #include "./board.hpp"
+#define depth 9
 using std::vector;
 using std::string;
 struct coordDirection {
@@ -12,7 +14,8 @@ struct winInfo {
     coordDirection coords;
     int winCol;
 };
-std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta); // Minimax function
+void performMove(Board gameBoard); // Performs a move
+std::pair<int, int> minimax(Board board, const int d, bool maximizingPlayer, int alpha, int beta); // Minimax function
 std::pair<bool, vector<int> > aboutToWin(Board board, char givenPlayer); // Checks if a given player has a winning move
 vector<coordDirection> isGameDone(vector<vector<char> > &matrix, const char givenPlayer); // Checks if the given player has won
 int getScore(Board board, const char givenPlayer); // Gets the calculated score of the board

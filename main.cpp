@@ -11,36 +11,5 @@ using std::string;
 using std::vector;
 
 int main() {
-    const int depth = 8;
-    Board gameBoard; // Declare board
-    // gameBoard.currentGame = "3541164636665504330416110034";
-    // gameBoard.currentGame = "303130";
-    bool computer = false;
-    while(true) {
-        gameBoard.computeBoard();
-        cout << "Board:" << endl;
-        gameBoard.printBoard();
-        vector<vector<char> > matrix = gameBoard.getMatrixBoard();
-        if(isGameDone(matrix, 'X').size() > 0) {
-            cout << "You Win!" << endl;
-            break;
-        } else if(isGameDone(matrix, 'O').size() > 0) {
-            cout << "You Lose!" << endl;
-            break;
-        }
-        if(computer) {
-            int nextMove = minimax(gameBoard, depth, true, INT32_MIN, INT32_MAX).second;
-            cerr << "Return of minimax: " << nextMove << endl;
-            gameBoard.currentGame += std::to_string(nextMove);
-            cerr << "Current game is: " << gameBoard.currentGame << endl;
-        } else {
-            cout << "Enter a column to move in: ";
-            int columnMove;
-            std::cin >> columnMove;
-            gameBoard.currentGame += std::to_string(columnMove);
-            cerr << "Current game is: " << gameBoard.currentGame << endl;
-        }
-        computer = !computer;
-    }
-    // output(); // Call graphics
+    output(); // Call graphics
 }
