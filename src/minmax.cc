@@ -5,14 +5,13 @@
 #include "../hsrc/minmax.hpp"
 #include "../hsrc/board.hpp"
 #include "../hsrc/boardgui.hpp"
-#define depth 9
+#define minimaxDepth 7
 using std::cout;
 using std::endl;
 using std::vector;
 using std::string;
 using std::cerr;
-bool computer = false;
-void performMove(Board gameBoard) {
+void performMove(Board gameBoard, bool computer) {
     gameBoard.computeBoard();
     cout << "Board:" << endl;
     gameBoard.printBoard();
@@ -25,7 +24,7 @@ void performMove(Board gameBoard) {
         return;
     }
     if(computer) {
-        int nextMove = minimax(gameBoard, depth, true, INT32_MIN, INT32_MAX).second;
+        int nextMove = minimax(gameBoard, minimaxDepth, true, INT32_MIN, INT32_MAX).second;
         cerr << "Return of minimax: " << nextMove << endl;
         gameBoard.currentGame += std::to_string(nextMove);
         cerr << "Current game is: " << gameBoard.currentGame << endl;
@@ -36,11 +35,10 @@ void performMove(Board gameBoard) {
         gameBoard.currentGame += std::to_string(columnMove);
         cerr << "Current game is: " << gameBoard.currentGame << endl;
     }
-    computer = !computer;
     updateBoard(gameBoard);
 }
-std::pair<int, int> minimax(Board board, const int d, bool maximizingPlayer, int alpha, int beta) {
-    if(d == 0)
+std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta) {
+    if(depth == 0)
         return std::make_pair(getScore(board, 'X'), -1);
     Board updated = board;
     std::pair<int, int> ret;
@@ -61,7 +59,7 @@ std::pair<int, int> minimax(Board board, const int d, bool maximizingPlayer, int
         for(unsigned int i = 0; i < 7; ++i) {
             if(!canUpdateBoard(board.currentGame, i)) continue;
             updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-            int compValue = (minimax(updated, d - 1, false, alpha, beta)).first;
+            int compValue = (minimax(updated, depth - 1, false, alpha, beta)).first;
             if(compValue >= ret.first) {
                 ret.first = compValue;
                 ret.second = i;
@@ -84,7 +82,7 @@ std::pair<int, int> minimax(Board board, const int d, bool maximizingPlayer, int
         for(unsigned int i = 0; i < 7; ++i) {
             if(!canUpdateBoard(board.currentGame, i)) continue;
             updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-            int compValue = (minimax(updated, d - 1, true, alpha, beta)).first;
+            int compValue = (minimax(updated, depth - 1, true, alpha, beta)).first;
             if(compValue <= ret.first) {
                 ret.first = compValue;
                 ret.second = i;
@@ -123,12 +121,14 @@ int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) {
     vector<coordDirection> arrConnectThrees = findConnectThrees(computedBoard, arrConnectTwos, board.rows, board.columns, assignedPlayer);
     int numConnectThree = arrConnectThrees.size();
     int numInCenter = countCenter(computedBoard, board.rows, board.columns, assignedPlayer);
+    int numInEdge = countEdges(computedBoard, board.rows, board.columns, assignedPlayer);
     vector<winInfo> possibleWins = possibleWin(computedBoard, board.rows, board.columns, assignedPlayer);
     int numPossibleWins = possibleWins.size();
     // cerr << "ConnectTwos: " << numConnectTwo << " ConnectThrees: " << numConnectThree << " CenterPieces: " << numInCenter << " Possible wins: " << numPossibleWins << endl;
     // Calculate final score
     int score = 0;
     score += numInCenter;
+    score -= numInEdge * 3;
     score += numConnectTwo * 2;
     score += numConnectThree * 4;
     if(givenPlayer == assignedPlayer)
@@ -265,6 +265,22 @@ int countCenter(vector<vector<char> > board, const int rows, const int columns, 
     int cnt = 0;
     for(int i = 0; i < rows; ++i) {
         if(board[i][colToSearch] == givenPlayer) {
+            ++cnt;
+        }
+    }
+    return cnt;
+}
+int countEdges(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer) { // Counts the number of pieces in edge columns of the board
+    const int colToSearch = 0;
+    const int colToSearchTwo = 6;
+    int cnt = 0;
+    for(int i = 0; i < rows; ++i) {
+        if(board[i][colToSearch] == givenPlayer) {
+            ++cnt;
+        }
+    }
+    for(int i = 0; i < rows; ++i) {
+        if(board[i][colToSearchTwo] == givenPlayer) {
             ++cnt;
         }
     }

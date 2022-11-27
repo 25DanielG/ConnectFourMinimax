@@ -12,7 +12,7 @@
 #define gameBorder 100
 #define gameW (gameBorder * 2)
 #define gameH (gameBorder * 1.5)
-bool running, fullscreen, winner = false;
+bool running, fullscreen, winner = false, computer = false;
 SDL_Renderer* renderer;
 SDL_Window* window;
 int frameCount = 0, timerFPS, lastFrame, fps;
@@ -31,8 +31,13 @@ void update() {
 void input() {
     SDL_Event e;
     while(SDL_PollEvent(&e)) {
-        if(e.type == SDL_QUIT) {
-            running = false;
+        switch (e.type) {
+            case SDL_QUIT:
+                running = false;
+                break;
+            case SDL_MOUSEBUTTONDOWN:
+                mousePress(e.button);
+                break;
         }
     }
     const Uint8 *keyStates = SDL_GetKeyboardState(NULL);
@@ -41,6 +46,20 @@ void input() {
     }
     if(keyStates[SDL_SCANCODE_F]) {
         fullscreen = !fullscreen;
+    }
+}
+void mousePress(SDL_MouseButtonEvent& b) {
+    if(b.button == SDL_BUTTON_LEFT) {
+        int xPos = b.x;
+        int yPos = b.y;
+        if(xPos >= gameBorder && xPos <= gameBorder + (WIDTH - gameW)
+          && yPos >= gameBorder && yPos <= gameBorder + (HEIGHT - gameH)) {
+            xPos -= gameBorder;
+            xPos /= ((WIDTH - (gameBorder * 2)) / 7);
+            gameBoard.currentGame += std::to_string(xPos);
+            draw();
+            performMove(gameBoard, true);
+        }
     }
 }
 void draw() {
@@ -178,7 +197,8 @@ void output() {
         update();
         input();
         draw();
-        performMove(gameBoard);
+        //performMove(gameBoard, computer);
+        //computer = !computer;
     }
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
