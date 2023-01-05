@@ -68,6 +68,7 @@
         "iterator": "cpp",
         "utility": "cpp",
         "condition_variable": "cpp",
-        "thread": "cpp"
+        "thread": "cpp",
+        "iomanip": "cpp"
     }
 }

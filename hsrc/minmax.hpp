@@ -25,7 +25,7 @@ vector<coordDirection> findConnectThrees(const vector<vector<char> > &board, con
 int countCenter(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer); // Counts the number of pieces in the center of the board
 int countEdges(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer); // Counts the number of pieces in edge columns of the board
 bool containedConnect(coordDirection connected, bool type, vector<vector<char> > board, const int rows, const int columns, const char givenPlayer); // Checks if the given connect two or three is blocked (pieces on either side of it)
-vector<winInfo> possibleWin(const vector<vector<char> > board, const int rows, const int columns, const char givenPlayer); // Finds a possible win
+vector<winInfo> possibleWin(const Board board, const int rows, const int columns, const char givenPlayer); // Finds a possible win
 vector<coordDirection> findConnectFours(const vector<vector<char> > &board, const vector<coordDirection> &connectThrees, const int rows, const int columns, const char givenPlayer); // Finds wins in the board
 bool canUpdateBoard(const string game, const int toUpdate); // Checks if you can add a number to a current game; prevents segmentation faults
 #endif
