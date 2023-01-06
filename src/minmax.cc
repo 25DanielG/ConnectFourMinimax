@@ -16,7 +16,7 @@ using std::string;
 using std::vector;
 int cnt = 0;
 const int NUM_THREADS = 8;
-std::queue<std::pair<Board, int>> jobQueue;
+std::queue<std::pair<Board, int> > jobQueue;
 pthread_mutex_t queueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t queueCond = PTHREAD_COND_INITIALIZER;
 std::pair<int, int> result;
@@ -52,7 +52,8 @@ void *minimax_thread(void *arg) {
             if (!canUpdateBoard(board.currentGame, i))
                 continue;
             updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-            jobQueue.push(std::make_pair(updated, depth - 1));
+            // jobQueue.push(std::make_pair(updated, depth - 1));
+            addJob(std::make_pair(updated, depth - 1));
         }
         pthread_cond_broadcast(&queueCond);
     }
@@ -63,7 +64,8 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
     for (int i = 0; i < NUM_THREADS; ++i) {
         pthread_create(&threads[i], NULL, minimax_thread, NULL);
     }
-    jobQueue.push(std::make_pair(board, depth));
+    // jobQueue.push(std::make_pair(board, depth));
+    addJob(std::make_pair(board, depth));
     pthread_cond_broadcast(&queueCond);
     for (int i = 0; i < NUM_THREADS; ++i) {
         pthread_join(threads[i], NULL);
@@ -71,11 +73,17 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
     return result;
 }
 
+void addJob(std::pair<Board, int> job) {
+    pthread_mutex_lock(&queueMutex);
+    jobQueue.push(job);
+    pthread_mutex_unlock(&queueMutex);
+}
+
 void performMove(Board gameBoard, bool computer) {
     gameBoard.computeBoard();
     cout << "Board:" << endl;
     gameBoard.printBoard();
-    vector<vector<char>> matrix = gameBoard.getMatrixBoard();
+    vector<vector<char> > matrix = gameBoard.getMatrixBoard();
     if (isGameDone(matrix, 'X').size() > 0) {
         cout << "You Win!" << endl;
         return;
@@ -98,7 +106,7 @@ void performMove(Board gameBoard, bool computer) {
     updateBoard(gameBoard);
 }
 
-std::pair<bool, vector<int>> aboutToWin(Board board, char givenPlayer) {
+std::pair<bool, vector<int> > aboutToWin(Board board, char givenPlayer) {
     vector<winInfo> wins = possibleWin(board, board.rows, board.columns, givenPlayer);
     vector<int> cols;
     for (winInfo w : wins)
@@ -106,7 +114,7 @@ std::pair<bool, vector<int>> aboutToWin(Board board, char givenPlayer) {
     return std::make_pair(wins.size() > 0, cols);
 }
 
-vector<coordDirection> isGameDone(vector<vector<char>> &matrix, const char givenPlayer) {
+vector<coordDirection> isGameDone(vector<vector<char> > &matrix, const char givenPlayer) {
     int rows = matrix.size(), columns = matrix[0].size();
     vector<coordDirection> twos = connectTwos(matrix, rows, columns, givenPlayer);
     vector<coordDirection> threes = findConnectThrees(matrix, twos, rows, columns, givenPlayer);
@@ -122,7 +130,7 @@ int getScore(Board board, const char givenPlayer) {
 }
 
 int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) { // Scores the current position of the board
-    vector<vector<char>> computedBoard = board.getMatrixBoard();
+    vector<vector<char> > computedBoard = board.getMatrixBoard();
     vector<coordDirection> arrConnectTwos = connectTwos(computedBoard, board.rows, board.columns, assignedPlayer);
     int numConnectTwo = arrConnectTwos.size();
     vector<coordDirection> arrConnectThrees = findConnectThrees(computedBoard, arrConnectTwos, board.rows, board.columns, assignedPlayer);
@@ -145,7 +153,7 @@ int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) {
     return score;
 }
 
-vector<coordDirection> connectTwos(const vector<vector<char>> &board, const int rows, const int columns, const char givenPlayer) { // Returns a vector of coordinates each describing the start of a connect two
+vector<coordDirection> connectTwos(const vector<vector<char> > &board, const int rows, const int columns, const char givenPlayer) { // Returns a vector of coordinates each describing the start of a connect two
     vector<coordDirection> arrCoords;
     coordDirection tmpRet;
     for (int i = 0; i < rows; ++i) {
@@ -227,7 +235,7 @@ vector<coordDirection> connectTwos(const vector<vector<char>> &board, const int 
     return arrCoords;
 }
 
-vector<coordDirection> findConnectThrees(const vector<vector<char>> &board, const vector<coordDirection> &connectTwos, const int rows, const int columns, const char givenPlayer) { // Returns a vector of all the connect threes using the connect twos & directions found from the connect twos function
+vector<coordDirection> findConnectThrees(const vector<vector<char> > &board, const vector<coordDirection> &connectTwos, const int rows, const int columns, const char givenPlayer) { // Returns a vector of all the connect threes using the connect twos & directions found from the connect twos function
     vector<coordDirection> arrRet;
     std::pair<int, int> tmpCoord;
     for (coordDirection singleCD : connectTwos) {
@@ -274,7 +282,7 @@ vector<coordDirection> findConnectThrees(const vector<vector<char>> &board, cons
     return arrRet;
 }
 
-int countCenter(vector<vector<char>> board, const int rows, const int columns, const char givenPlayer) { // Counts the number of pieces in the center of the board
+int countCenter(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer) { // Counts the number of pieces in the center of the board
     const int colToSearch = (columns / 2);
     int cnt = 0;
     for (int i = 0; i < rows; ++i) {
@@ -285,7 +293,7 @@ int countCenter(vector<vector<char>> board, const int rows, const int columns, c
     return cnt;
 }
 
-int countEdges(vector<vector<char>> board, const int rows, const int columns, const char givenPlayer) { // Counts the number of pieces in edge columns of the board
+int countEdges(vector<vector<char> > board, const int rows, const int columns, const char givenPlayer) { // Counts the number of pieces in edge columns of the board
     const int colToSearch = 0;
     const int colToSearchTwo = 6;
     int cnt = 0;
@@ -302,7 +310,7 @@ int countEdges(vector<vector<char>> board, const int rows, const int columns, co
     return cnt;
 }
 
-bool containedConnect(coordDirection connected, bool type, vector<vector<char>> board, const int rows, const int columns, const char givenPlayer) { // Checks if the given connect two or three is blocked (pieces on either side of it)
+bool containedConnect(coordDirection connected, bool type, vector<vector<char> > board, const int rows, const int columns, const char givenPlayer) { // Checks if the given connect two or three is blocked (pieces on either side of it)
     if (type) {                                                                                                                                     // Connect two
         if (connected.direction == "down_left") {
             // IF UPPER BOUND OR UPPER HAS ENEMY PIECE    AND    LOWER BOUND OR HAS ENEMY PIECE : RETURN FALSE (BOTH SIDES BLOCKED OR BOUNDED)
@@ -348,7 +356,7 @@ vector<winInfo> possibleWin(const Board board, const int rows, const int columns
     return arrWins;
 }
 
-vector<coordDirection> findConnectFours(const vector<vector<char>> &board, const vector<coordDirection> &connectThrees, const int rows, const int columns, const char givenPlayer) { // Finds wins in the board
+vector<coordDirection> findConnectFours(const vector<vector<char> > &board, const vector<coordDirection> &connectThrees, const int rows, const int columns, const char givenPlayer) { // Finds wins in the board
     vector<coordDirection> wins;
     for (coordDirection singleCD : connectThrees) {
         if (singleCD.direction == "down_left") {

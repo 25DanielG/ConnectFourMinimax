@@ -16,6 +16,8 @@ struct winInfo {
 };
 void performMove(Board gameBoard, bool computer); // Performs a move
 std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta); // Minimax function
+void *minimax_thread(void *arg);
+void addJob(std::pair<Board, int> job);
 std::pair<bool, vector<int> > aboutToWin(Board board, char givenPlayer); // Checks if a given player has a winning move
 vector<coordDirection> isGameDone(vector<vector<char> > &matrix, const char givenPlayer); // Checks if the given player has won
 int getScore(Board board, const char givenPlayer); // Gets the calculated score of the board
