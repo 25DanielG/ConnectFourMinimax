@@ -4,10 +4,8 @@
 #include <map>
 using std::cout;
 using std::endl;
-using std::vector;
-using std::string;
 void Board::computeBoard() { // Converts the board from a board sequence to a 2d array
-    vector<vector<char> > computedBoard(rows, vector<char>(columns, '#'));
+    std::vector<std::vector<char> > computedBoard(rows, std::vector<char>(columns, '#'));
     bool playerOne = true;
     std::map<int, int> rowTracker;
     for(int i = 0; i < columns; ++i) {
@@ -41,8 +39,8 @@ void Board::getMove() {
     cout << endl;
     currentGame += move;
 }
-vector<vector<char> > Board::getMatrixBoard() { // Gets the board from a game sequence to a matrix
-    vector<vector<char> > computedBoard(rows, vector<char>(columns, '#'));
+std::vector<std::vector<char> > Board::getMatrixBoard() { // Gets the board from a game sequence to a matrix
+    std::vector<std::vector<char> > computedBoard(rows, std::vector<char>(columns, '#'));
     bool playerOne = true;
     std::map<int, int> rowTracker;
     for(int i = 0; i < columns; ++i) {

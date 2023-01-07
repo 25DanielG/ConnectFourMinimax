@@ -7,11 +7,9 @@
 #include <vector>
 #include <math.h>
 #include <string>
-#define WIDTH 1280
+#define WIDTH 780
 #define HEIGHT 720
 #define gameBorder 100
-#define gameW (gameBorder * 2)
-#define gameH (gameBorder * 1.5)
 bool running, fullscreen, winner = false, computer = false;
 SDL_Renderer* renderer;
 SDL_Window* window;
@@ -52,14 +50,10 @@ void mousePress(SDL_MouseButtonEvent& b) {
     if(b.button == SDL_BUTTON_LEFT) {
         int xPos = b.x;
         int yPos = b.y;
-        if(xPos >= gameBorder && xPos <= gameBorder + (WIDTH - gameW)
-          && yPos >= gameBorder && yPos <= gameBorder + (HEIGHT - gameH)) {
-            xPos -= gameBorder;
-            xPos /= ((WIDTH - (gameBorder * 2)) / 7);
-            gameBoard.currentGame += std::to_string(xPos);
-            draw();
-            performMove(gameBoard, true);
-        }
+        xPos /= 110;
+        gameBoard.currentGame += std::to_string(xPos);
+        draw();
+        performMove(gameBoard, true);
     }
 }
 void draw() {
@@ -71,41 +65,11 @@ void draw() {
     backRect.h = HEIGHT;
     SDL_RenderFillRect(renderer, &backRect);
 
-    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Rectangle
-    SDL_Rect frontRect;
-    frontRect.x = gameBorder;
-    frontRect.y = gameBorder;
-    frontRect.w = WIDTH - gameW;
-    frontRect.h = HEIGHT - gameH;
-    SDL_RenderDrawRect(renderer, &frontRect);
-
-    std::vector<SDL_Rect> cols; // Column lines
-    for(int i = 0; i < 6; ++i) {
-        SDL_Rect single;
-        single.x = gameBorder + (((WIDTH - (gameBorder * 2)) / 7) * (i + 1));
-        single.y = gameBorder;
-        single.w = 1;
-        single.h = HEIGHT - (gameBorder * 1.5);
-        cols.push_back(single);
-    }
-    for(int i = 0; i < 6; ++i) SDL_RenderDrawRect(renderer, &cols[i]);
-
-    std::vector<SDL_Rect> rows; // Horizontal lines
-    for(int i = 0; i < 5; ++i) {
-        SDL_Rect single;
-        single.x = gameBorder;
-        single.y = gameBorder + (((HEIGHT - (gameBorder * 1.5)) / 6) * (i + 1));
-        single.w = WIDTH - (gameBorder * 2);
-        single.h = 1;
-        rows.push_back(single);
-    }
-    for(int i = 0; i < 5; ++i) SDL_RenderDrawRect(renderer, &rows[i]);
-
     std::vector<std::vector<char> > matrix = gameBoard.getMatrixBoard();
-    int pushX = ((WIDTH - (gameBorder * 2)) / 7);
-    int startX = gameBorder + ((WIDTH - (gameBorder * 2)) / 14);
-    int pushY = ((HEIGHT - (gameBorder * 1.5)) / 6);
-    int startY = gameBorder + ((HEIGHT - (gameBorder * 1.5)) / 12);
+    int pushX = ((WIDTH - (gameBorder * 0.1)) / 7);
+    int startX = gameBorder / 1.65;
+    int pushY = (HEIGHT / 5.8) - (gameBorder / 6);
+    int startY = gameBorder - (gameBorder / 3);
     for(int i = 0; i < gameBoard.rows; ++i) {
         for(int j = 0; j < gameBoard.columns; ++j) {
             if(matrix[i][j] == '#')
@@ -114,7 +78,7 @@ void draw() {
                 SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
             else
                 SDL_SetRenderDrawColor(renderer, 255, 255, 0, 255);
-            for(int r = 0; r <= 30; ++r) {
+            for(int r = 0; r <= 45; ++r) {
                 sdl_ellipse(startX + (pushX * j), startY + (pushY * i), r, r);
             }
         }
@@ -125,6 +89,9 @@ void draw() {
     if(timerFPS  < (1000 / 60)) {
         SDL_Delay((1000 / 60) - timerFPS);
     }
+    SDL_Surface * image = SDL_LoadBMP("../images/clear_connect_board.bmp");
+    SDL_Texture * texture = SDL_CreateTextureFromSurface(renderer, image);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
     SDL_RenderPresent(renderer);
 }
 
@@ -184,6 +151,7 @@ void output() {
     if(SDL_CreateWindowAndRenderer(WIDTH, HEIGHT, 0, &window, &renderer) < 0) {
         std::cerr << "Failed at SDL_CreateWindowAndRenderer()" << std::endl;
     }
+
     SDL_SetWindowTitle(window, "Connect Four");
     SDL_ShowCursor(1);
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "2");

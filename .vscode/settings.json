@@ -69,6 +69,8 @@
         "utility": "cpp",
         "condition_variable": "cpp",
         "thread": "cpp",
-        "iomanip": "cpp"
+        "iomanip": "cpp",
+        "deque": "cpp",
+        "queue": "cpp"
     }
 }
