@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 #include "./board.hpp"
-#define minimaxDepth 6
+#define minimaxDepth 7
 #define NUM_COLUMNS 7
 #define NUM_ROWS 8
 struct coordDirection {

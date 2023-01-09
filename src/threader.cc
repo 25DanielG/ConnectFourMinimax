@@ -26,9 +26,12 @@ void *addResult(std::pair<int, int> res) {
 }
 
 void *minimax_thread(void *arg) {
-    if(jobQueue.empty()) cerr << "No jobs to do thats weird" << std::endl;
-    while(!jobQueue.empty()) {
+    while(true) {
         pthread_mutex_lock(&queueMutex);
+        if(jobQueue.empty()) {
+            pthread_mutex_unlock(&queueMutex);
+            break;
+        }
         cerr << "thread #" << arg << " took a job now job queue is of size " << jobQueue.size() << std::endl;
         auto job = jobQueue.front();
         jobQueue.pop();
