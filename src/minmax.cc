@@ -1,6 +1,7 @@
-#include "../hsrc/minmax.hpp"
-#include "../hsrc/board.hpp"
-#include "../hsrc/boardgui.hpp"
+#include "../src_hpp/minmax.hpp"
+#include "../src_hpp/board.hpp"
+#include "../src_hpp/boardgui.hpp"
+#include "../src_hpp/threader.hpp"
 #include <algorithm>
 #include <iostream>
 #include <pthread.h>
@@ -12,151 +13,90 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-const int NUM_THREADS = 8;
-std::queue<minimaxValues> jobQueue;
-std::vector<std::pair<int, int> > results;
-pthread_mutex_t queueMutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t queueCond = PTHREAD_COND_INITIALIZER;
-pthread_mutex_t resultsMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t resultsCond = PTHREAD_COND_INITIALIZER;
-std::pair<int, int> result;
+const int NUM_THREADS = 8;
 
-void *minimax_thread(void *arg) {
-    int num_jobs = *(int *)arg;
-    int jobs_completed = 0;
-
-    pthread_mutex_lock(&queueMutex);
-    while (jobs_completed < num_jobs) {
-        while (jobQueue.empty()) {
-            pthread_cond_wait(&queueCond, &queueMutex);
-        }
-        auto job = jobQueue.front();
-        jobQueue.pop();
-        pthread_mutex_unlock(&queueMutex);
-
-        auto board = job.board;
-        int depth = job.depth;
-        bool maximizingPlayer = job.maximizingPlayer;
-        int alpha = job.alpha;
-        int beta = job.beta;
-
-        if (depth == 0) {
-            pthread_mutex_lock(&resultsMutex);
-            results.push_back(std::make_pair(getScore(board, 'X'), -1));
-            pthread_cond_signal(&resultsCond);
-            pthread_mutex_unlock(&resultsMutex);
-            jobs_completed++;
-            continue;
-        }
-        Board updated = board;
-        updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
-        auto isWin = aboutToWin(board, 'O');
-        if (isWin.first) {
-            pthread_mutex_lock(&resultsMutex);
-            results.push_back(std::make_pair(INT32_MAX, isWin.second[0]));
-            pthread_cond_signal(&resultsCond);
-            pthread_mutex_unlock(&resultsMutex);
-            jobs_completed++;
-            continue;
-        }
-        isWin = aboutToWin(board, 'X');
-        if (isWin.first) {
-            pthread_mutex_lock(&resultsMutex);
-            results.push_back(std::make_pair(INT32_MIN, isWin.second[0]));
-            pthread_cond_signal(&resultsCond);
-            pthread_mutex_unlock(&resultsMutex);
-            ++jobs_completed;
-            continue;
-        }
-        int bestScore = maximizingPlayer ? INT32_MIN : INT32_MAX;
-        int bestMove = -1;
-        for (unsigned int i = 0; i < 7; ++i) {
-            if (!canUpdateBoard(board.currentGame, i))
-                continue;
-            updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-            minimaxValues param = {updated, depth - 1, !maximizingPlayer, alpha, beta};
-            pthread_mutex_lock(&queueMutex);
-            jobQueue.push(param);
-            pthread_cond_signal(&queueCond);
-            pthread_mutex_unlock(&queueMutex);
-            auto score = minimax(updated, depth - 1, !maximizingPlayer, alpha, beta).first;
-            if (maximizingPlayer) {
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestMove = i;
-                    alpha = std::max(alpha, bestScore);
-                    if (alpha >= beta) {
-                        break;
-                    }
-                }
-            } else {
-                if (score < bestScore) {
-                    bestScore = score;
-                    bestMove = i;
-                    beta = std::min(beta, bestScore);
-                    if (alpha >= beta) {
-                        break;
-                    }
-                }
-            }
-        }
-    }
-}
-
-std::pair<int, int> minimax(Board board, int depth, bool maximizingPlayer, int alpha, int beta) {
-    if (depth == 0) {
-        return std::make_pair(getScore(board, 'X'), -1);
-    }
+std::pair<int, int> threading(Board board, int depth, bool maximizingPlayer, int alpha, int beta) {
+    pthread_t threads[NUM_THREADS];
     Board updated = board;
-    updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
-    auto isWin = aboutToWin(board, 'O');
-    if (isWin.first) {
-        return std::make_pair(INT32_MAX, isWin.second[0]);
-    }
-    isWin = aboutToWin(board, 'X');
-    if (isWin.first) {
-        return std::make_pair(INT32_MIN, isWin.second[0]);
-    }
-    int bestScore = maximizingPlayer ? INT32_MIN : INT32_MAX;
-    int bestMove = -1;
-    for (unsigned int i = 0; i < 7; ++i) {
-        if (!canUpdateBoard(board.currentGame, i))
-            continue;
+    updated.currentGame += "9";
+    minimaxValues job = {board, depth - 1, !maximizingPlayer, alpha, beta};
+    for (unsigned int i = 0; i < NUM_COLUMNS; ++i) {
+        if(!canUpdateBoard(board.currentGame, i)) continue;
         updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-        auto score = minimax(updated, depth - 1, !maximizingPlayer, alpha, beta);
-        if (maximizingPlayer) {
-            if (score.first > bestScore) {
-                bestScore = score.first;
-                bestMove = i;
-                alpha = std::max(alpha, bestScore);
-                if (alpha >= beta) {
-                    break;
-                }
-            }
-        } else {
-            if (score.first < bestScore) {
-                bestScore = score.first;
-                bestMove = i;
-                beta = std::min(beta, bestScore);
-                if (alpha >= beta) {
-                    break;
-                }
-            }
+        job.board = updated;
+        cerr << "Adding a job for i: " << i << endl;
+        addJob(job);
+    }
+    for (unsigned int i = 0; i < NUM_THREADS; ++i) {
+        pthread_create(&threads[i], NULL, minimax_thread, (void *) i);
+    }
+    pthread_cond_broadcast(&queueCond);
+    for (unsigned int i = 0; i < NUM_THREADS; ++i) {
+        cerr << "joined thread #" << i << endl;
+        pthread_join(threads[i], NULL);
+    }
+    int maxVal = maximizingPlayer ? INT32_MIN : INT32_MAX;
+    std::pair<int, int> max = std::make_pair(maxVal, -1);
+    std::vector<std::pair<int, int> > results = getResults();
+    cerr << "in front of for loop" << std::endl;
+    for (auto result : results) {
+        cerr << "result: " << result.first << ", " << result.second << endl;
+        if (result.first > max.first) {
+            max = result;
         }
     }
-    return std::make_pair(bestScore, bestMove);
+    return max;
 }
 
-void addJob(minimaxValues job) {
-    pthread_mutex_lock(&queueMutex);
-    jobQueue.push(job);
-    pthread_mutex_unlock(&queueMutex);
+std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta) {
+    // cout << "minimax called with depth" << depth << " maximize" << maximizingPlayer << endl;
+    if(depth == 0)
+        return std::make_pair(getScore(board, 'X'), -1);
+    Board updated = board;
+    int maxVal = maximizingPlayer ? INT32_MIN : INT32_MAX;
+    std::pair<int, int> ret = std::make_pair(maxVal, -1);
+    updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
+    /*auto isWin = aboutToWin(board, 'X');
+    if(isWin.first) {
+        ret.second = isWin.second[0];
+        return ret;
+    }
+    isWin = aboutToWin(board, 'O');
+    if(isWin.first) {
+        ret.second = isWin.second[0];
+        return ret;
+    }*/
+    if(maximizingPlayer) {
+        for(unsigned int i = 0; i < NUM_COLUMNS; ++i) {
+            if(!canUpdateBoard(board.currentGame, i)) continue;
+            updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
+            int compValue = (minimax(updated, depth - 1, !maximizingPlayer, alpha, beta)).first;
+            if(compValue > ret.first) {
+                ret.first = compValue;
+                ret.second = i;
+            }
+            alpha = std::max(alpha, ret.first);
+            if(alpha >= beta) break;
+        }
+    } else {
+        for(unsigned int i = 0; i < NUM_COLUMNS; ++i) {
+            if(!canUpdateBoard(board.currentGame, i)) continue;
+            updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
+            int compValue = (minimax(updated, depth - 1, !maximizingPlayer, alpha, beta)).first;
+            if(compValue < ret.first) {
+                ret.first = compValue;
+                ret.second = i;
+            }
+            beta = std::min(beta, ret.first);
+            if(alpha >= beta) break;
+        }
+    }
+    return ret;
 }
 
 void performMove(Board gameBoard, bool computer) {
     gameBoard.computeBoard();
-    cout << "Board:" << endl;
-    gameBoard.printBoard();
     std::vector<std::vector<char> > matrix = gameBoard.getMatrixBoard();
     if (isGameDone(matrix, 'X').size() > 0) {
         cout << "You Win!" << endl;
@@ -166,16 +106,13 @@ void performMove(Board gameBoard, bool computer) {
         return;
     }
     if (computer) {
-        int nextMove = minimax(gameBoard, minimaxDepth, true, INT32_MIN, INT32_MAX).second;
-        cerr << "Return of minimax: " << nextMove << endl;
+        int nextMove = threading(gameBoard, minimaxDepth, true, INT32_MIN, INT32_MAX).second;
         gameBoard.currentGame += std::to_string(nextMove);
-        cerr << "Current game is: " << gameBoard.currentGame << endl;
     } else {
         cout << "Enter a column to move in: ";
         int columnMove;
         std::cin >> columnMove;
         gameBoard.currentGame += std::to_string(columnMove);
-        cerr << "Current game is: " << gameBoard.currentGame << endl;
     }
     updateBoard(gameBoard);
 }

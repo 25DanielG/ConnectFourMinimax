@@ -1,8 +1,8 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
-#include "../hsrc/boardgui.hpp"
-#include "../hsrc/board.hpp"
-#include "../hsrc/minmax.hpp"
+#include "../src_hpp/boardgui.hpp"
+#include "../src_hpp/board.hpp"
+#include "../src_hpp/minmax.hpp"
 #include <iostream>
 #include <vector>
 #include <math.h>

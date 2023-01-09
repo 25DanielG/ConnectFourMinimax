@@ -3,7 +3,9 @@
 #include <vector>
 #include <iostream>
 #include "./board.hpp"
-#define minimaxDepth 7
+#define minimaxDepth 6
+#define NUM_COLUMNS 7
+#define NUM_ROWS 8
 struct coordDirection {
     std::pair<int, int> coordinate;
     std::string direction;
@@ -20,9 +22,8 @@ struct minimaxValues {
     int beta;
 };
 void performMove(Board gameBoard, bool computer); // Performs a move
-std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta); // Function that starts the threading process
-void *minimax_thread(void *arg); // Threading function: takes jobs from job queue
-void addJob(minimaxValues job); // Adds a job to to job queue while mutex lock is held
+std::pair<int, int> threading(Board board, const int depth, bool maximizingPlayer, int alpha, int beta); // Function that starts the threading process
+std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta); // Function that performs the minimax past the threading process
 std::pair<bool, std::vector<int> > aboutToWin(Board board, char givenPlayer); // Checks if a given player has a winning move
 std::vector<coordDirection> isGameDone(std::vector<std::vector<char> > &matrix, const char givenPlayer); // Checks if the given player has won
 int getScore(Board board, const char givenPlayer); // Gets the calculated score of the board

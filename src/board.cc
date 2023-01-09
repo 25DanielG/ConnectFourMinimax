@@ -1,5 +1,5 @@
 #include <iostream>
-#include "../hsrc/board.hpp"
+#include "../src_hpp/board.hpp"
 #include <vector>
 #include <map>
 using std::cout;
