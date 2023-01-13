@@ -53,7 +53,7 @@ void mousePress(SDL_MouseButtonEvent& b) {
         xPos /= 110;
         gameBoard.currentGame += std::to_string(xPos);
         draw();
-        performMove(gameBoard, true);
+        performMove(gameBoard);
     }
 }
 void draw() {

@@ -18,14 +18,24 @@ const int NUM_THREADS = 8;
 
 std::pair<int, int> threading(Board board, int depth, bool maximizingPlayer, int alpha, int beta) {
     pthread_t threads[NUM_THREADS];
-    Board updated = board;
-    updated.currentGame += "9";
+    int maxVal = maximizingPlayer ? INT32_MIN : INT32_MAX;
+    std::pair<int, int> max = std::make_pair(maxVal, -1);
+    auto isWin = aboutToWin(board, 'X');
+    if (isWin.first) {
+        max.second = isWin.second[0];
+        return max;
+    }
+    isWin = aboutToWin(board, 'O');
+    if (isWin.first) {
+        max.second = isWin.second[0];
+        return max;
+    }
     minimaxValues job = {board, depth - 1, !maximizingPlayer, alpha, beta};
     for (unsigned int i = 0; i < NUM_COLUMNS; ++i) {
         if(!canUpdateBoard(board.currentGame, i)) continue;
-        updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
+        Board updated = board;
+        updated.currentGame += (i + '0');
         job.board = updated;
-        cerr << "Adding a job for i: " << i << endl;
         addJob(job);
     }
     for (unsigned int i = 0; i < NUM_THREADS; ++i) {
@@ -33,41 +43,31 @@ std::pair<int, int> threading(Board board, int depth, bool maximizingPlayer, int
     }
     pthread_cond_broadcast(&queueCond);
     for (unsigned int i = 0; i < NUM_THREADS; ++i) {
-        cerr << "joined thread #" << i << endl;
         pthread_join(threads[i], NULL);
     }
-    int maxVal = maximizingPlayer ? INT32_MIN : INT32_MAX;
-    std::pair<int, int> max = std::make_pair(maxVal, -1);
     std::vector<std::pair<int, int> > results = getResults();
-    cerr << "in front of for loop" << std::endl;
     for (auto result : results) {
-        cerr << "result: " << result.first << ", " << result.second << endl;
-        if (result.first > max.first) {
+        cerr << "Result: " << result.first << ", " << result.second << endl;
+        if (result.first > max.first)
             max = result;
-        }
     }
+    clearResults();
     return max;
 }
 
 std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta) {
-    // cout << "minimax called with depth" << depth << " maximize" << maximizingPlayer << endl;
     if(depth == 0)
         return std::make_pair(getScore(board, 'X'), -1);
     Board updated = board;
     int maxVal = maximizingPlayer ? INT32_MIN : INT32_MAX;
     std::pair<int, int> ret = std::make_pair(maxVal, -1);
     updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
-    /*auto isWin = aboutToWin(board, 'X');
-    if(isWin.first) {
-        ret.second = isWin.second[0];
-        return ret;
-    }
-    isWin = aboutToWin(board, 'O');
-    if(isWin.first) {
-        ret.second = isWin.second[0];
-        return ret;
-    }*/
     if(maximizingPlayer) {
+        auto isWin = aboutToWin(board, 'X');
+        if(isWin.first) {
+            ret.second = isWin.second[0];
+            return ret;
+        }
         for(unsigned int i = 0; i < NUM_COLUMNS; ++i) {
             if(!canUpdateBoard(board.currentGame, i)) continue;
             updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
@@ -75,11 +75,16 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
             if(compValue > ret.first) {
                 ret.first = compValue;
                 ret.second = i;
+                alpha = std::max(alpha, ret.first);
+                if(alpha >= beta) break;
             }
-            alpha = std::max(alpha, ret.first);
-            if(alpha >= beta) break;
         }
     } else {
+        auto isWin = aboutToWin(board, 'O');
+        if(isWin.first) {
+            ret.second = isWin.second[0];
+            return ret;
+        }
         for(unsigned int i = 0; i < NUM_COLUMNS; ++i) {
             if(!canUpdateBoard(board.currentGame, i)) continue;
             updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
@@ -87,15 +92,15 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
             if(compValue < ret.first) {
                 ret.first = compValue;
                 ret.second = i;
+                beta = std::min(beta, ret.first);
+                if(alpha >= beta) break;
             }
-            beta = std::min(beta, ret.first);
-            if(alpha >= beta) break;
         }
     }
     return ret;
 }
 
-void performMove(Board gameBoard, bool computer) {
+void performMove(Board gameBoard) {
     gameBoard.computeBoard();
     std::vector<std::vector<char> > matrix = gameBoard.getMatrixBoard();
     if (isGameDone(matrix, 'X').size() > 0) {
@@ -105,15 +110,8 @@ void performMove(Board gameBoard, bool computer) {
         cout << "You Lose!" << endl;
         return;
     }
-    if (computer) {
-        int nextMove = threading(gameBoard, minimaxDepth, true, INT32_MIN, INT32_MAX).second;
-        gameBoard.currentGame += std::to_string(nextMove);
-    } else {
-        cout << "Enter a column to move in: ";
-        int columnMove;
-        std::cin >> columnMove;
-        gameBoard.currentGame += std::to_string(columnMove);
-    }
+    int nextMove = threading(gameBoard, minimaxDepth, true, INT32_MIN, INT32_MAX).second;
+    gameBoard.currentGame += std::to_string(nextMove);
     updateBoard(gameBoard);
 }
 
@@ -324,19 +322,15 @@ int countEdges(std::vector<std::vector<char> > board, const int rows, const int 
 bool containedConnect(coordDirection connected, bool type, std::vector<std::vector<char> > board, const int rows, const int columns, const char givenPlayer) { // Checks if the given connect two or three is blocked (pieces on either side of it)
     if (type) {                                                                                                                                               // Connect two
         if (connected.direction == "down_left") {
-            // IF UPPER BOUND OR UPPER HAS ENEMY PIECE    AND    LOWER BOUND OR HAS ENEMY PIECE : RETURN FALSE (BOTH SIDES BLOCKED OR BOUNDED)
             if ((((connected.coordinate.first == 0) || (connected.coordinate.second == columns - 1)) || ((board[connected.coordinate.first - 1][connected.coordinate.second + 1] != givenPlayer) && (board[connected.coordinate.first - 1][connected.coordinate.second + 1] != '#'))) && (((connected.coordinate.first >= rows - 2) || (connected.coordinate.second <= 1)) || ((board[connected.coordinate.first + 2][connected.coordinate.second - 2] != givenPlayer) && (board[connected.coordinate.first + 2][connected.coordinate.second - 2] != '#'))))
                 return false;
         } else if (connected.direction == "down") {
-            // IF UPPER BOUND OR UPPER HAS ENEMY PIECE    AND    LOWER BOUND OR HAS ENEMY PIECE : RETURN FALSE (BOTH SIDES BLOCKED OR BOUNDED)
             if ((((connected.coordinate.first == 0)) || ((board[connected.coordinate.first - 1][connected.coordinate.second] != givenPlayer) && (board[connected.coordinate.first - 1][connected.coordinate.second] != '#'))) && (((connected.coordinate.first >= rows - 2)) || ((board[connected.coordinate.first + 2][connected.coordinate.second] != givenPlayer) && (board[connected.coordinate.first + 2][connected.coordinate.second] != '#'))))
                 return false;
         } else if (connected.direction == "down_right") {
-            // IF UPPER BOUND OR UPPER HAS ENEMY PIECE    AND    LOWER BOUND OR HAS ENEMY PIECE : RETURN FALSE (BOTH SIDES BLOCKED OR BOUNDED)
             if ((((connected.coordinate.first == 0) || (connected.coordinate.second == 0)) || ((board[connected.coordinate.first - 1][connected.coordinate.second - 1] != givenPlayer) && (board[connected.coordinate.first - 1][connected.coordinate.second - 1] != '#'))) && (((connected.coordinate.first >= rows - 2) || (connected.coordinate.second >= columns - 2)) || ((board[connected.coordinate.first + 2][connected.coordinate.second + 2] != givenPlayer) && (board[connected.coordinate.first + 2][connected.coordinate.second + 2] != '#'))))
                 return false;
         } else {
-            // IF LEFT BOUND OR LEFT HAS ENEMY PIECE    AND    RIGHT BOUND OR RIGHT HAS ENEMY PIECE : RETURN FALSE (BOTH SIDES BLOCKED OR BOUNDED)
             if ((((connected.coordinate.second == 0)) || ((board[connected.coordinate.first][connected.coordinate.second - 1] != givenPlayer) && (board[connected.coordinate.first][connected.coordinate.second - 1] != '#'))) && (((connected.coordinate.second >= columns - 2)) || ((board[connected.coordinate.first][connected.coordinate.second + 2] != givenPlayer) && (board[connected.coordinate.first][connected.coordinate.second + 2] != '#'))))
                 return false;
         }

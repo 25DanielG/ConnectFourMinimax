@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 #include "./board.hpp"
-#define minimaxDepth 7
+#define minimaxDepth 5
 #define NUM_COLUMNS 7
 #define NUM_ROWS 8
 struct coordDirection {
@@ -21,7 +21,7 @@ struct minimaxValues {
     int alpha;
     int beta;
 };
-void performMove(Board gameBoard, bool computer); // Performs a move
+void performMove(Board gameBoard); // Performs a move
 std::pair<int, int> threading(Board board, const int depth, bool maximizingPlayer, int alpha, int beta); // Function that starts the threading process
 std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta); // Function that performs the minimax past the threading process
 std::pair<bool, std::vector<int> > aboutToWin(Board board, char givenPlayer); // Checks if a given player has a winning move
