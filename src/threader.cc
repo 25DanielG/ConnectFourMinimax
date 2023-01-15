@@ -51,19 +51,17 @@ void *minimax_thread(void *arg) {
         jobQueue.pop();
         pthread_mutex_unlock(&queueMutex);
 
-        std::pair<int, int> max = minimax(job.board, job.depth, job.maximizingPlayer, job.alpha, job.beta);
-
+        cerr << job.board.currentGame << " " << job.depth << " " << job.maximizingPlayer << std::endl;
+        std::pair<int, int> max = minimax(job.board, job.depth, !job.maximizingPlayer, job.alpha, job.beta);
         addResult(max);
+
         auto end = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(end - start);
         cerr << "Thread #" << arg << " finished job in: " << duration.count() << " milliseconds." << std::endl;
     }
 }
 
-std::vector<std::pair<int, int> > getResults() {
-    return results;
-}
-
-void clearResults() {
-    results.clear();
+std::vector<std::pair<int, int> > *getResults() {
+    auto *p = &results;
+    return p;
 }
