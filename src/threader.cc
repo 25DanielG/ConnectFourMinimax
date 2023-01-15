@@ -19,6 +19,18 @@ void *addJob(minimaxValues job) {
     return NULL;
 }
 
+void printJobs() {
+    pthread_mutex_lock(&queueMutex);
+    for(unsigned int i = 0; i < jobQueue.size(); ++i) {
+        auto job = jobQueue.front();
+        jobQueue.pop();
+        jobQueue.push(job);
+        cerr << job.board.currentGame << " ";
+    }
+    cerr << std::endl;
+    pthread_mutex_unlock(&queueMutex);
+}
+
 void *addResult(std::pair<int, int> res) {
     pthread_mutex_lock(&resultsMutex);
     results.push_back(res);

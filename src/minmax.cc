@@ -14,22 +14,17 @@ using std::cout;
 using std::endl;
 
 pthread_cond_t queueCond = PTHREAD_COND_INITIALIZER;
-const int NUM_THREADS = 8;
+const int NUM_THREADS = 1;
 
 std::pair<int, int> threading(Board board, int depth, bool maximizingPlayer, int alpha, int beta) {
     pthread_t threads[NUM_THREADS];
-    int maxVal = maximizingPlayer ? INT32_MIN : INT32_MAX;
-    std::pair<int, int> max = std::make_pair(maxVal, -1);
-    auto isWin = aboutToWin(board, 'X');
-    if (isWin.first) {
-        max.second = isWin.second[0];
-        return max;
+    char player = maximizingPlayer ? 'X' : 'O';
+    char opponent = maximizingPlayer ? 'O' : 'X';
+    auto blockMove = aboutToWin(board, opponent);
+    if (blockMove.first) {
+        return std::make_pair(maximizingPlayer ? INT32_MAX : INT32_MIN, blockMove.second[0]);
     }
-    isWin = aboutToWin(board, 'O');
-    if (isWin.first) {
-        max.second = isWin.second[0];
-        return max;
-    }
+    std::pair<int, int> max = maximizingPlayer ? std::make_pair(INT32_MIN, -1) : std::make_pair(INT32_MAX, -1);
     minimaxValues job = {board, depth - 1, !maximizingPlayer, alpha, beta};
     for (unsigned int i = 0; i < NUM_COLUMNS; ++i) {
         if(!canUpdateBoard(board.currentGame, i)) continue;
@@ -59,42 +54,32 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
     if(depth == 0)
         return std::make_pair(getScore(board, 'X'), -1);
     Board updated = board;
-    int maxVal = maximizingPlayer ? INT32_MIN : INT32_MAX;
-    std::pair<int, int> ret = std::make_pair(maxVal, -1);
+    char player = maximizingPlayer ? 'X' : 'O';
+    char opponent = maximizingPlayer ? 'O' : 'X';
+    auto blockMove = aboutToWin(board, opponent);
+    if (blockMove.first) {
+        return std::make_pair(maximizingPlayer ? INT32_MAX : INT32_MIN, blockMove.second[0]);
+    }
+    std::pair<int, int> ret = maximizingPlayer ? std::make_pair(INT32_MIN, -1) : std::make_pair(INT32_MAX, -1);
     updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
-    if(maximizingPlayer) {
-        auto isWin = aboutToWin(board, 'X');
-        if(isWin.first) {
-            ret.second = isWin.second[0];
-            return ret;
-        }
-        for(unsigned int i = 0; i < NUM_COLUMNS; ++i) {
-            if(!canUpdateBoard(board.currentGame, i)) continue;
-            updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-            int compValue = (minimax(updated, depth - 1, !maximizingPlayer, alpha, beta)).first;
+    for(unsigned int i = 0; i < NUM_COLUMNS; ++i) {
+        if(!canUpdateBoard(board.currentGame, i)) continue;
+        updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
+        int compValue = (minimax(updated, depth - 1, !maximizingPlayer, alpha, beta)).first;
+        if(maximizingPlayer) {
             if(compValue > ret.first) {
                 ret.first = compValue;
                 ret.second = i;
-                alpha = std::max(alpha, ret.first);
-                if(alpha >= beta) break;
             }
-        }
-    } else {
-        auto isWin = aboutToWin(board, 'O');
-        if(isWin.first) {
-            ret.second = isWin.second[0];
-            return ret;
-        }
-        for(unsigned int i = 0; i < NUM_COLUMNS; ++i) {
-            if(!canUpdateBoard(board.currentGame, i)) continue;
-            updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-            int compValue = (minimax(updated, depth - 1, !maximizingPlayer, alpha, beta)).first;
+            alpha = std::max(alpha, ret.first);
+            if(alpha >= beta) break;
+        } else {
             if(compValue < ret.first) {
                 ret.first = compValue;
                 ret.second = i;
-                beta = std::min(beta, ret.first);
-                if(alpha >= beta) break;
             }
+            beta = std::min(beta, ret.first);
+            if(alpha >= beta) break;
         }
     }
     return ret;
@@ -110,7 +95,8 @@ void performMove(Board gameBoard) {
         cout << "You Lose!" << endl;
         return;
     }
-    int nextMove = threading(gameBoard, minimaxDepth, true, INT32_MIN, INT32_MAX).second;
+    int nextMove = minimax(gameBoard, minimaxDepth, true, INT32_MIN, INT32_MAX).second;
+    cerr << "Returned: " << nextMove << endl;
     gameBoard.currentGame += std::to_string(nextMove);
     updateBoard(gameBoard);
 }
@@ -158,7 +144,7 @@ int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) {
     if (givenPlayer == assignedPlayer)
         score += numPossibleWins * 10000;
     else
-        score += numPossibleWins * 100;
+        score += numPossibleWins * 1000;
     return score;
 }
 
