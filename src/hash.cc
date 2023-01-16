@@ -4,8 +4,15 @@
 
 std::unordered_map<std::string, std::pair<int, int> > transposition_table;
 
-void add_to_table(std::string board, int depth, int move) {
-    transposition_table[board] = std::make_pair(depth, move);
+void add(std::string board, int depth, int move) {
+    auto it = transposition_table.find(board);
+    if (it != transposition_table.end()) {
+        if (depth > it->second.first) {
+            it->second = std::make_pair(depth, move);
+        }
+    } else {
+        transposition_table[board] = std::make_pair(depth, move);
+    }
 }
 
 void save(const std::string &file_path) {
@@ -23,15 +30,35 @@ void save(const std::string &file_path) {
 
 void load(const std::string &file_path) {
     std::ifstream in(file_path, std::ios::binary);
+    if (!in) {
+        std::cerr << "Error: File " << file_path << " does not exist." << std::endl;
+        return;
+    }
     uint64_t size;
-    in.read(reinterpret_cast<char *>(&size), sizeof(size));
+    if (!in.read(reinterpret_cast<char *>(&size), sizeof(size)) || !in) {
+        std::cerr << "Error: File " << file_path << " is empty." << std::endl;
+        in.close();
+        return;
+    }
     for (uint64_t i = 0; i < size; ++i) {
         uint64_t key_size;
-        in.read(reinterpret_cast<char *>(&key_size), sizeof(key_size));
+        if (!in.read(reinterpret_cast<char *>(&key_size), sizeof(key_size)) || !in) {
+            std::cerr << "Error: File " << file_path << " is corrupted." << std::endl;
+            in.close();
+            return;
+        }
         std::string key(key_size, ' ');
-        in.read(const_cast<char*>(key.c_str()), key_size);
+        if (!in.read(const_cast<char *>(key.c_str()), key_size) || !in) {
+            std::cerr << "Error: File " << file_path << " is corrupted." << std::endl;
+            in.close();
+            return;
+        }
         std::pair<int, int> value;
-        in.read(reinterpret_cast<char *>(&value), sizeof(value));
+        if (!in.read(reinterpret_cast<char *>(&value), sizeof(value)) || !in) {
+            std::cerr << "Error: File " << file_path << " is corrupted." << std::endl;
+            in.close();
+            return;
+        }
         transposition_table[key] = value;
     }
     in.close();
@@ -42,7 +69,7 @@ std::pair<int, int> search(const std::string &key) {
     if (it != transposition_table.end()) {
         return it->second;
     } else {
-        return {0, 0};
+        return std::make_pair(0, 0);
     }
 }
 

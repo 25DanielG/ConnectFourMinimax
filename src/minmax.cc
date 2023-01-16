@@ -2,6 +2,7 @@
 #include "../src_hpp/board.hpp"
 #include "../src_hpp/boardgui.hpp"
 #include "../src_hpp/threader.hpp"
+#include "../src_hpp/hash.hpp"
 #include <algorithm>
 #include <iostream>
 #include <pthread.h>
@@ -15,8 +16,14 @@ using std::endl;
 
 pthread_cond_t queueCond = PTHREAD_COND_INITIALIZER;
 const int NUM_THREADS = 8;
+const std::string file_path = "transposition_table.bin";
 
 std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
+    auto table = getTable();
+    auto it = table->find(board.currentGame);
+    if (it != table->end()) {
+        return std::make_pair(INT32_MAX, it->second.second);
+    }
     pthread_t threads[NUM_THREADS];
     char computer = 'O';
     auto blockMove = aboutToWin(board, computer);
@@ -46,6 +53,7 @@ std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
             max = result;
     }
     results->clear();
+    add(board.currentGame, depth, max.second);
     return max;
 }
 
@@ -89,9 +97,11 @@ void performMove(Board gameBoard) {
     std::vector<std::vector<char> > matrix = gameBoard.getMatrixBoard();
     if (isGameDone(matrix, 'X').size() > 0) {
         cout << "You Win!" << endl;
+        save(file_path);
         return;
     } else if (isGameDone(matrix, 'O').size() > 0) {
         cout << "You Lose!" << endl;
+        save(file_path);
         return;
     }
     int nextMove = threading(gameBoard, minimaxDepth, INT16_MIN, INT16_MAX).second;
