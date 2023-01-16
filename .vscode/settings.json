@@ -71,6 +71,8 @@
         "thread": "cpp",
         "iomanip": "cpp",
         "deque": "cpp",
-        "queue": "cpp"
+        "queue": "cpp",
+        "fstream": "cpp",
+        "stack": "cpp"
     }
 }

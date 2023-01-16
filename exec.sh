@@ -3,4 +3,5 @@ cd build
 rm ./connectFour
 cmake -S ..
 make -S
-./connectFour
+cd ..
+./build/connectFour

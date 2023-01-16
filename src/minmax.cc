@@ -42,7 +42,6 @@ std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
     }
     std::vector<std::pair<int, int> > *results = getResults();
     for (auto result : *results) {
-        cerr << "Result: " << result.first << ", " << result.second << endl;
         if (result.first > max.first)
             max = result;
     }
@@ -96,7 +95,6 @@ void performMove(Board gameBoard) {
         return;
     }
     int nextMove = threading(gameBoard, minimaxDepth, INT16_MIN, INT16_MAX).second;
-    cerr << "Returned: " << nextMove << endl;
     gameBoard.currentGame += std::to_string(nextMove);
     updateBoard(gameBoard);
 }
