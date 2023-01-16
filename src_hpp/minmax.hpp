@@ -3,9 +3,10 @@
 #include <vector>
 #include <iostream>
 #include "./board.hpp"
-#define minimaxDepth 5
+#define minimaxDepth 7
 #define NUM_COLUMNS 7
 #define NUM_ROWS 8
+#define NO_MOVE -1
 struct coordDirection {
     std::pair<int, int> coordinate;
     std::string direction;
@@ -16,10 +17,11 @@ struct winInfo {
 };
 struct minimaxValues {
     Board board;
-    int depth;
+    unsigned int depth;
     bool maximizingPlayer;
     int alpha;
     int beta;
+    unsigned int move;
 };
 void performMove(Board gameBoard); // Performs a move
 std::pair<int, int> threading(Board board, const int depth, bool maximizingPlayer, int alpha, int beta); // Function that starts the threading process

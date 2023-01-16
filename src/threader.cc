@@ -45,15 +45,12 @@ void *minimax_thread(void *arg) {
             pthread_mutex_unlock(&queueMutex);
             break;
         }
-        cerr << "Thread #" << arg << " took a job" << std::endl;
         auto start = high_resolution_clock::now();
         auto job = jobQueue.front();
         jobQueue.pop();
         pthread_mutex_unlock(&queueMutex);
 
-        cerr << job.board.currentGame << " " << job.depth << " " << job.maximizingPlayer << std::endl;
-        std::pair<int, int> max = minimax(job.board, job.depth, !job.maximizingPlayer, job.alpha, job.beta);
-        addResult(max);
+        addResult(std::make_pair(minimax(job.board, job.depth, job.maximizingPlayer, job.alpha, job.beta).first, job.move));
 
         auto end = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(end - start);
