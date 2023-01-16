@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 #include "./board.hpp"
-#define minimaxDepth 8
+#define minimaxDepth 7
 #define NUM_COLUMNS 7
 #define NUM_ROWS 8
 #define NO_MOVE -1

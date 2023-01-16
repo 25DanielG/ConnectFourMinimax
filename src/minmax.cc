@@ -52,7 +52,7 @@ std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
     }
     std::vector<std::pair<int, int> > *results = getResults();
     for (auto result : *results) {
-        if (result.first > max.first)
+        if (result.first >= max.first)
             max = result;
     }
     results->clear();
@@ -78,13 +78,13 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
         updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
         int compValue = (minimax(updated, depth - 1, !maximizingPlayer, alpha, beta)).first;
         if(maximizingPlayer) {
-            if(compValue > ret.first) {
+            if(compValue >= ret.first) {
                 ret.first = compValue;
                 ret.second = i;
             }
             alpha = std::max(alpha, ret.first);
         } else {
-            if(compValue < ret.first) {
+            if(compValue <= ret.first) {
                 ret.first = compValue;
                 ret.second = i;
             }
