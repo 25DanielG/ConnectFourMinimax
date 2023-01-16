@@ -16,13 +16,16 @@ using std::endl;
 
 pthread_cond_t queueCond = PTHREAD_COND_INITIALIZER;
 const int NUM_THREADS = 8;
+bool train = false;
 const std::string file_path = "transposition_table.bin";
 
 std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
-    auto table = getTable();
-    auto it = table->find(board.currentGame);
-    if (it != table->end()) {
-        return std::make_pair(INT32_MAX, it->second.second);
+    if(!train) {
+        auto table = getTable();
+        auto it = table->find(board.currentGame);
+        if (it != table->end()) {
+            return std::make_pair(INT32_MAX, it->second.second);
+        }
     }
     pthread_t threads[NUM_THREADS];
     char computer = 'O';
@@ -107,6 +110,23 @@ void performMove(Board gameBoard) {
     int nextMove = threading(gameBoard, minimaxDepth, INT16_MIN, INT16_MAX).second;
     gameBoard.currentGame += std::to_string(nextMove);
     updateBoard(gameBoard);
+}
+
+void trainComputer(int train_depth) {
+    train = true;
+    Board game;
+    while (true) {
+        game.computeBoard();
+        game.printBoard();
+        std::vector<std::vector<char> > matrix = game.getMatrixBoard();
+        if (isGameDone(matrix, 'X').size() > 0 || isGameDone(matrix, 'O').size() > 0) {
+            cout << "Game Ended" << endl;
+            save(file_path);
+            return;
+        }
+        int nextMove = threading(game, train_depth, INT16_MIN, INT16_MAX).second;
+        game.currentGame += std::to_string(nextMove);
+    }
 }
 
 std::pair<bool, std::vector<int> > aboutToWin(Board board, char givenPlayer) {
