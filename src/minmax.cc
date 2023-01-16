@@ -23,7 +23,7 @@ std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
     if(!train) {
         auto table = getTable();
         auto it = table->find(board.currentGame);
-        if (it != table->end()) {
+        if (it != table->end() && it->second.first >= depth) {
             return std::make_pair(INT32_MAX, it->second.second);
         }
     }
