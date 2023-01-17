@@ -2,16 +2,16 @@
 #include <fstream>
 #include <unordered_map>
 
-std::unordered_map<std::string, std::pair<int, int> > transposition_table;
+std::unordered_map<std::string, std::pair<int, std::pair<int, int> > > transposition_table;
 
-void add(std::string board, int depth, int move) {
+void add(std::string board, int depth, int score, int move) {
     auto it = transposition_table.find(board);
     if (it != transposition_table.end()) {
         if (depth > it->second.first) {
-            it->second = std::make_pair(depth, move);
+            it->second = std::make_pair(depth, std::make_pair(score, move));
         }
     } else {
-        transposition_table[board] = std::make_pair(depth, move);
+        transposition_table[board] = std::make_pair(depth, std::make_pair(score, move));
     }
 }
 
@@ -53,7 +53,7 @@ void load(const std::string &file_path) {
             in.close();
             return;
         }
-        std::pair<int, int> value;
+        std::pair<int, std::pair<int, int> > value;
         if (!in.read(reinterpret_cast<char *>(&value), sizeof(value)) || !in) {
             std::cerr << "Error: File " << file_path << " is corrupted." << std::endl;
             in.close();
@@ -64,16 +64,16 @@ void load(const std::string &file_path) {
     in.close();
 }
 
-std::pair<int, int> search(const std::string &key) {
+std::pair<int, std::pair<int, int> > search(const std::string &key) {
     auto it = transposition_table.find(key);
     if (it != transposition_table.end()) {
         return it->second;
     } else {
-        return std::make_pair(0, 0);
+        return std::make_pair(0, std::make_pair(0, 0));
     }
 }
 
-std::unordered_map<std::string, std::pair<int, int> > *getTable() {
+std::unordered_map<std::string, std::pair<int, std::pair<int, int> > > *getTable() {
     auto *p = &transposition_table;
     return p;
 }

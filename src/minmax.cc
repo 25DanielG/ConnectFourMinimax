@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <string>
 #include <vector>
+
 using std::cerr;
 using std::cout;
 using std::endl;
@@ -24,7 +25,7 @@ std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
         auto table = getTable();
         auto it = table->find(board.currentGame);
         if (it != table->end() && it->second.first >= depth) {
-            return std::make_pair(INT32_MAX, it->second.second);
+            return std::make_pair(it->second.second.first, it->second.second.second);
         }
     }
     pthread_t threads[NUM_THREADS];
@@ -55,8 +56,12 @@ std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
         if (result.first >= max.first)
             max = result;
     }
+    if(max.second == -1) {
+        max = std::make_pair(0, results->at(0).second);
+    } else {
+        add(board.currentGame, depth, max.first, max.second);
+    }
     results->clear();
-    add(board.currentGame, depth, max.second);
     return max;
 }
 
@@ -97,7 +102,11 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
 
 void performMove(Board gameBoard) {
     gameBoard.computeBoard();
+    std::pair<int, int> nextMove = threading(gameBoard, minimaxDepth, INT16_MIN, INT16_MAX);
+    gameBoard.currentGame += std::to_string(nextMove.second);
     std::vector<std::vector<char> > matrix = gameBoard.getMatrixBoard();
+    updateBoard(gameBoard);
+    cerr << endl << nextMove.first << endl;
     if (isGameDone(matrix, 'X').size() > 0) {
         cout << "You Win!" << endl;
         save(file_path);
@@ -106,10 +115,11 @@ void performMove(Board gameBoard) {
         cout << "You Lose!" << endl;
         save(file_path);
         return;
+    } else if (gameBoard.currentGame.length() >= 42) {
+        cout << "Tie!" << endl;
+        save(file_path);
+        return;
     }
-    int nextMove = threading(gameBoard, minimaxDepth, INT16_MIN, INT16_MAX).second;
-    gameBoard.currentGame += std::to_string(nextMove);
-    updateBoard(gameBoard);
 }
 
 void trainComputer(int train_depth) {
