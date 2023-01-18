@@ -6,6 +6,7 @@
 #include "./src_hpp/hash.hpp"
 #include "./src_hpp/minmax.hpp"
 using namespace std::chrono;
+
 const std::string file_path = "transposition_table.txt";
 const bool train = false;
 const bool train_depth = 8;

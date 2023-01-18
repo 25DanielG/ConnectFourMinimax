@@ -19,6 +19,7 @@ using std::endl;
 
 bool train = false;
 const int NUM_THREADS = 8;
+const std::string file_path = "transposition_table.txt";
 
 std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
     int bestScore = INT_MIN;

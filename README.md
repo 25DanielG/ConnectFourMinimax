@@ -23,9 +23,9 @@ Parameters:
 - minimax.hpp
     - Minimax depth (higher = smarter, longer)
     - Quiescence threshold (smaller = smarter, longer)
-    - File path (transposition table)
 - minimax.cc
     - NUM_THREADS
+    - save file path
 - main.cpp 
     - Train
     - load file_path
