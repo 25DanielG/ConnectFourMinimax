@@ -3,7 +3,7 @@
 #include <vector>
 #include <iostream>
 #include "./board.hpp"
-#define minimaxDepth 8
+#define minimaxDepth 7
 #define NUM_COLUMNS 7
 #define NUM_ROWS 8
 #define NO_MOVE -1
@@ -27,6 +27,7 @@ void performMove(Board gameBoard); // Performs a move
 void trainComputer(int train_depth); // Plays the comptuer against itself in order to expand the transposition table
 std::pair<int, int> threading(Board board, const int maxDepth, bool maximizingPlayer, int alpha, int beta); // Function that starts the threading process
 std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta); // Function that performs the minimax past the threading process
+std::pair<int, int> quiescence(Board board, int alpha, int beta); // Implementation of quiescence search to explore the quiet moves
 std::pair<bool, std::vector<int> > aboutToWin(Board board, char givenPlayer); // Checks if a given player has a winning move
 std::vector<coordDirection> isGameDone(std::vector<std::vector<char> > &matrix, const char givenPlayer); // Checks if the given player has won
 int getScore(Board board, const char givenPlayer); // Gets the calculated score of the board

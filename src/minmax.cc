@@ -17,6 +17,7 @@ using std::endl;
 
 pthread_cond_t queueCond = PTHREAD_COND_INITIALIZER;
 const int NUM_THREADS = 8;
+const int threshold = 10;
 bool train = false;
 const std::string file_path = "transposition_table.txt";
 
@@ -73,7 +74,12 @@ std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
 
 std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta) {
     if (depth == 0) {
-        return std::make_pair(getScore(board, 'O'), NO_MOVE);
+        int score = getScore(board, 'O');
+        if (abs(score) < threshold) {
+            return quiescence(board, alpha, beta);
+        } else {
+            return std::make_pair(score, NO_MOVE);
+        }
     } else if (!train) {
         auto table = getTable();
         auto it = table.find(board.currentGame);
@@ -110,6 +116,27 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
         if(alpha >= beta) break;
     }
     return ret;
+}
+
+std::pair<int, int> quiescence(Board board, int alpha, int beta) {
+    int score = getScore(board, 'O');
+    if (abs(score) < threshold) {
+        return std::make_pair(score, NO_MOVE);
+    }
+    std::pair<int, int> best = std::make_pair(INT16_MIN, NO_MOVE);
+    for (unsigned int i = 0; i < NUM_COLUMNS; ++i) {
+        if (!canUpdateBoard(board.currentGame, i)) continue;
+        Board updated = board;
+        updated.currentGame += (i + '0');
+        int value = quiescence(updated, alpha, beta).first;
+        if (value > best.first) {
+            best.first = value;
+            best.second = i;
+        }
+        alpha = std::max(alpha, value);
+        if (alpha >= beta) break;
+    }
+    return best;
 }
 
 void performMove(Board gameBoard) {
