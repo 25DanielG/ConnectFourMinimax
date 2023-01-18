@@ -10,4 +10,5 @@ void mousePress(SDL_MouseButtonEvent& b);
 void draw();
 void sdl_ellipse(int x0, int y0, int radiusX, int radiusY);
 void updateBoard(Board &board);
+void endGame();
 #endif

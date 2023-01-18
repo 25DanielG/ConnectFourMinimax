@@ -10,7 +10,7 @@
 #define WIDTH 780
 #define HEIGHT 720
 #define gameBorder 100
-bool running, fullscreen, winner = false, computer = false;
+bool running, fullscreen, winner = false, computer = false, gameEnd = false;
 SDL_Renderer* renderer;
 SDL_Window* window;
 int frameCount = 0, timerFPS, lastFrame, fps;
@@ -47,7 +47,7 @@ void input() {
     }
 }
 void mousePress(SDL_MouseButtonEvent& b) {
-    if(b.button == SDL_BUTTON_LEFT) {
+    if(b.button == SDL_BUTTON_LEFT && !gameEnd) {
         int xPos = b.x;
         int yPos = b.y;
         xPos /= 110;
@@ -175,4 +175,7 @@ void output() {
 }
 void updateBoard(Board &board) {
     gameBoard = board;
+}
+void endGame() {
+    gameEnd = true;
 }

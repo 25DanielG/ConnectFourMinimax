@@ -18,13 +18,13 @@ using std::endl;
 pthread_cond_t queueCond = PTHREAD_COND_INITIALIZER;
 const int NUM_THREADS = 8;
 bool train = false;
-const std::string file_path = "transposition_table.bin";
+const std::string file_path = "transposition_table.txt";
 
 std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
     if(!train) {
         auto table = getTable();
-        auto it = table->find(board.currentGame);
-        if (it != table->end() && it->second.first >= depth) {
+        auto it = table.find(board.currentGame);
+        if (it != table.end() && it->second.first >= depth) {
             return std::make_pair(it->second.second.first, it->second.second.second);
         }
     }
@@ -106,18 +106,21 @@ void performMove(Board gameBoard) {
     gameBoard.currentGame += std::to_string(nextMove.second);
     std::vector<std::vector<char> > matrix = gameBoard.getMatrixBoard();
     updateBoard(gameBoard);
-    cerr << endl << nextMove.first << endl;
+    cerr << endl << "SCORE: " << nextMove.first << endl << endl;
     if (isGameDone(matrix, 'X').size() > 0) {
         cout << "You Win!" << endl;
-        save(file_path);
+        save(getTable(), file_path);
+        endGame();
         return;
     } else if (isGameDone(matrix, 'O').size() > 0) {
         cout << "You Lose!" << endl;
-        save(file_path);
+        save(getTable(), file_path);
+        endGame();
         return;
     } else if (gameBoard.currentGame.length() >= 42) {
         cout << "Tie!" << endl;
-        save(file_path);
+        save(getTable(), file_path);
+        endGame();
         return;
     }
 }
@@ -131,7 +134,7 @@ void trainComputer(int train_depth) {
         std::vector<std::vector<char> > matrix = game.getMatrixBoard();
         if (isGameDone(matrix, 'X').size() > 0 || isGameDone(matrix, 'O').size() > 0) {
             cout << "Game Ended" << endl;
-            save(file_path);
+            // save(file_path);
             return;
         }
         int nextMove = threading(game, train_depth, INT16_MIN, INT16_MAX).second;

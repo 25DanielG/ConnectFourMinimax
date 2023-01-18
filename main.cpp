@@ -4,7 +4,7 @@
 #include "./src_hpp/boardgui.hpp"
 #include "./src_hpp/hash.hpp"
 #include "./src_hpp/minmax.hpp"
-const std::string file_path = "transposition_table.bin";
+const std::string file_path = "transposition_table.txt";
 const bool train = false;
 const bool train_depth = 8;
 
@@ -14,7 +14,7 @@ int main() {
         std::cerr << "Error: File " << file_path << " does not exist." << std::endl;
         return 0;
     }
-    load(file_path);
+    load(getTable(), file_path);
 
     if(train) {
         trainComputer(train_depth);
