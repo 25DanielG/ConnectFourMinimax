@@ -187,7 +187,6 @@ int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) {
     int numInEdge = countEdges(computedBoard, board.rows, board.columns, assignedPlayer);
     std::vector<winInfo> possibleWins = possibleWin(board, board.rows, board.columns, assignedPlayer);
     int numPossibleWins = possibleWins.size();
-    // cerr << "ConnectTwos: " << numConnectTwo << " ConnectThrees: " << numConnectThree << " CenterPieces: " << numInCenter << " Possible wins: " << numPossibleWins << endl;
     // Calculate final score
     int score = 0, numEmpty = (NUM_COLUMNS * NUM_ROWS) - (board.currentGame.length());
     score += numInCenter * 2.5;
