@@ -8,6 +8,7 @@
 #define NUM_COLUMNS 7
 #define NUM_ROWS 8
 #define NO_MOVE -1
+#define file_path "transposition_table.txt"
 struct coordDirection {
     std::pair<int, int> coordinate;
     std::string direction;

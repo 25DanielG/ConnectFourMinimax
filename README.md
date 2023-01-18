@@ -4,9 +4,9 @@ This program uses
 - Iterative Deepening
 - Quiescence Search
 - Alpha Beta Pruning
-- pthread.h multithreading
-- Transposition table helped by boost's serialization
-- Questionable SDL graphics
+- Boost multithreading
+- Transposition table (Boost Unordered Map Serialization)
+- SDL graphics
 
 Heuristic Algorithm:
 +2.5 each center piece
@@ -18,3 +18,15 @@ Heuristic Algorithm:
 Running The Program:
 - Have Boost and SDL2 installed using Homebrew
 - Run the exec.sh script
+
+Parameters:
+- minimax.hpp
+    - Minimax depth (higher = smarter, longer)
+    - Quiescence threshold (smaller = smarter, longer)
+    - File path (transposition table)
+- minimax.cc
+    - NUM_THREADS
+- main.cpp 
+    - Train
+    - load file_path
+    - Train depth

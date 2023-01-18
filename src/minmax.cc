@@ -17,10 +17,8 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-pthread_cond_t queueCond = PTHREAD_COND_INITIALIZER;
-const int NUM_THREADS = 8;
 bool train = false;
-const std::string file_path = "transposition_table.txt";
+const int NUM_THREADS = 8;
 
 std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
     int bestScore = INT_MIN;
