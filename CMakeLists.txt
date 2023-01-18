@@ -13,7 +13,7 @@ project(${PROJECT_NAME} CXX)
 find_package(SDL2 REQUIRED)
 find_package(SDL2_ttf REQUIRED)
 find_package(Boost REQUIRED serialization)
-find_package(Boost COMPONENTS system REQUIRED)
+find_package(Boost COMPONENTS system thread REQUIRED)
 
 add_executable(${PROJECT_NAME} main.cpp)
 add_subdirectory(src)

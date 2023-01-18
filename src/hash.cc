@@ -19,16 +19,25 @@ void add(std::string board, int depth, int score, int move) {
     }
 }
 
-void save(std::unordered_map<std::string, std::pair<int, std::pair<int,int> > >& map, const std::string& filename) {
+void save(std::unordered_map<std::string, std::pair<int, std::pair<int,int> > > &map, const std::string &filename) {
     std::ofstream ofs(filename);
     boost::archive::text_oarchive oa(ofs);
     oa << transposition_table;
 }
 
-void load(std::unordered_map<std::string, std::pair<int, std::pair<int,int> > >& map, const std::string& filename) {
+void load(std::unordered_map<std::string, std::pair<int, std::pair<int,int> > > &map, const std::string &filename) {
     std::ifstream ifs(filename);
-    boost::archive::text_iarchive ia(ifs);
-    ia >> map;
+    if (!ifs.good()) {
+        std::cerr << "File not found or empty" << std::endl;
+        return;
+    }
+    try {
+        boost::archive::text_iarchive ia(ifs);
+        ia >> map;
+    } catch (boost::archive::archive_exception &e) {
+        std::cerr << "Error reading file: " << e.what() << std::endl;
+    }
+    ifs.close();
 }
 
 std::pair<int, std::pair<int, int> > search(const std::string &key) {

@@ -183,11 +183,12 @@ int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) {
     int numPossibleWins = possibleWins.size();
     // cerr << "ConnectTwos: " << numConnectTwo << " ConnectThrees: " << numConnectThree << " CenterPieces: " << numInCenter << " Possible wins: " << numPossibleWins << endl;
     // Calculate final score
-    int score = 0;
-    score += numInCenter;
-    score -= numInEdge * 3;
-    score += numConnectTwo * 2;
-    score += numConnectThree * 4;
+    int score = 0, numEmpty = (NUM_COLUMNS * NUM_ROWS) - (board.currentGame.length());
+    score += numInCenter * 2.5;
+    score -= numInEdge;
+    score += numConnectTwo * 5;
+    score += numConnectThree * 20;
+    score += numEmpty * 0.1;
     if (givenPlayer == assignedPlayer)
         score += numPossibleWins * 10000;
     else
