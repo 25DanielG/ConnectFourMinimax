@@ -3,6 +3,8 @@
 #include "../src_hpp/boardgui.hpp"
 #include "../src_hpp/threader.hpp"
 #include "../src_hpp/hash.hpp"
+#include <boost/thread.hpp>
+#include <boost/bind.hpp>
 #include <algorithm>
 #include <iostream>
 #include <pthread.h>
@@ -17,7 +19,6 @@ using std::endl;
 
 pthread_cond_t queueCond = PTHREAD_COND_INITIALIZER;
 const int NUM_THREADS = 8;
-const int threshold = 10;
 bool train = false;
 const std::string file_path = "transposition_table.txt";
 
@@ -30,44 +31,41 @@ std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
         if (it != table.end() && it->second.first >= depth) {
             bestScore = it->second.second.first;
             bestMove = it->second.second.second;
-        } else {
-            pthread_t threads[NUM_THREADS];
-            char computer = 'O';
-            auto blockMove = aboutToWin(board, computer);
-            if (blockMove.first) {
-                return std::make_pair(INT32_MAX, blockMove.second[0]);
-            }
-            std::pair<int, int> max = std::make_pair(INT16_MIN, NO_MOVE);
-            minimaxValues job = {board, depth - 1, false, alpha, beta, NO_MOVE};
-            for (unsigned int i = 0; i < NUM_COLUMNS; ++i) {
-                if(!canUpdateBoard(board.currentGame, i)) continue;
-                Board updated = board;
-                updated.currentGame += (i + '0');
-                job.board = updated;
-                job.move = i;
-                addJob(job);
-            }
-            for (unsigned int i = 0; i < NUM_THREADS; ++i) {
-                pthread_create(&threads[i], NULL, minimax_thread, (void *) i);
-            }
-            pthread_cond_broadcast(&queueCond);
-            for (unsigned int i = 0; i < NUM_THREADS; ++i) {
-                pthread_join(threads[i], NULL);
-            }
-            std::vector<std::pair<int, int> > *results = getResults();
-            for (auto result : *results) {
-                if (result.first >= max.first)
-                    max = result;
-            }
-            if(max.second == -1) {
-                max = std::make_pair(0, results->at(0).second);
-            } else {
-                add(board.currentGame, depth, max.first, max.second);
-            }
-            results->clear();
-            bestScore = max.first;
-            bestMove = max.second;
+            return std::make_pair(bestScore, bestMove);
         }
+        boost::thread_group threads;
+        char computer = 'O';
+        auto blockMove = aboutToWin(board, computer);
+        if (blockMove.first) {
+            return std::make_pair(INT32_MAX, blockMove.second[0]);
+        }
+        std::pair<int, int> max = std::make_pair(INT16_MIN, NO_MOVE);
+        minimaxValues job = {board, depth - 1, false, alpha, beta, NO_MOVE};
+        for (unsigned int i = 0; i < NUM_COLUMNS; ++i) {
+            if(!canUpdateBoard(board.currentGame, i)) continue;
+            Board updated = board;
+            updated.currentGame += (i + '0');
+            job.board = updated;
+            job.move = i;
+            addJob(job);
+        }
+        for (unsigned int i = 0; i < NUM_THREADS; ++i) {
+            threads.create_thread(boost::bind(&minimax_thread, i));
+        }
+        threads.join_all();
+        std::vector<std::pair<int, int> > *results = getResults();
+        for (auto result : *results) {
+            if (result.first >= max.first)
+                max = result;
+        }
+        if(max.second == -1) {
+            max = std::make_pair(0, results->at(0).second);
+        } else {
+            add(board.currentGame, depth, max.first, max.second);
+        }
+        results->clear();
+        bestScore = max.first;
+        bestMove = max.second;
     }
     return std::make_pair(bestScore, bestMove);
 }
@@ -80,12 +78,11 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
         } else {
             return std::make_pair(score, NO_MOVE);
         }
-    } else if (!train) {
-        auto table = getTable();
-        auto it = table.find(board.currentGame);
-        if (it != table.end() && it->second.first >= depth) {
-            return std::make_pair(it->second.second.first, it->second.second.second);
-        }
+    }
+    auto table = getTable();
+    auto it = table.find(board.currentGame);
+    if (it != table.end() && it->second.first >= depth) {
+        return std::make_pair(it->second.second.first, it->second.second.second);
     }
     Board updated = board;
     char player = maximizingPlayer ? 'X' : 'O';

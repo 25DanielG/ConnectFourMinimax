@@ -31,6 +31,7 @@ void Board::printBoard() { // Prints the board given the 2d board array
         }
         cout << "|" << endl;
     }
+    cout << "________________________" << endl;
 }
 void Board::getMove() {
     cout << "Enter the column where you want to play a piece: ";

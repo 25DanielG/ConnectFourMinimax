@@ -1,3 +1,4 @@
+#include <boost/thread.hpp>
 #include <pthread.h>
 #include <iostream>
 #include <queue>
@@ -8,19 +9,17 @@ using std::cerr;
 
 std::queue<minimaxValues> jobQueue;
 std::vector<std::pair<int, int> > results;
-pthread_mutex_t queueMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t resultsMutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t resultsCond = PTHREAD_COND_INITIALIZER;
+boost::mutex queueMutex, resultsMutex, coutMutex;
 
 void *addJob(minimaxValues job) {
-    pthread_mutex_lock(&queueMutex);
+    queueMutex.lock();
     jobQueue.push(job);
-    pthread_mutex_unlock(&queueMutex);
+    queueMutex.unlock();
     return NULL;
 }
 
 void printJobs() {
-    pthread_mutex_lock(&queueMutex);
+    queueMutex.lock();
     for(unsigned int i = 0; i < jobQueue.size(); ++i) {
         auto job = jobQueue.front();
         jobQueue.pop();
@@ -28,33 +27,35 @@ void printJobs() {
         cerr << job.board.currentGame << " ";
     }
     cerr << std::endl;
-    pthread_mutex_unlock(&queueMutex);
+    queueMutex.unlock();
 }
 
 void *addResult(std::pair<int, int> res) {
-    pthread_mutex_lock(&resultsMutex);
+    resultsMutex.lock();
     results.push_back(res);
-    pthread_mutex_unlock(&resultsMutex);
+    resultsMutex.unlock();
     return NULL;
 }
 
-void *minimax_thread(void *arg) {
+void *minimax_thread(unsigned int arg) {
     while(true) {
-        pthread_mutex_lock(&queueMutex);
+        queueMutex.lock();
         if(jobQueue.empty()) {
-            pthread_mutex_unlock(&queueMutex);
+            queueMutex.unlock();
             break;
         }
         auto start = high_resolution_clock::now();
         auto job = jobQueue.front();
         jobQueue.pop();
-        pthread_mutex_unlock(&queueMutex);
+        queueMutex.unlock();
 
         addResult(std::make_pair(minimax(job.board, job.depth, job.maximizingPlayer, job.alpha, job.beta).first, job.move));
 
         auto end = high_resolution_clock::now();
         auto duration = duration_cast<milliseconds>(end - start);
+        coutMutex.lock();
         cerr << "Thread #" << arg << " finished job in: " << duration.count() << " milliseconds." << std::endl;
+        coutMutex.unlock();
     }
 }
 

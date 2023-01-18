@@ -2,6 +2,7 @@
 This program uses
 - Minimax
 - Iterative Deepening
+- Quiescence Search
 - Alpha Beta Pruning
 - pthread.h multithreading
 - Transposition table helped by boost's serialization
