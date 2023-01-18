@@ -68,6 +68,12 @@ std::pair<int, int> threading(Board board, int depth, int alpha, int beta) {
 std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta) {
     if (depth == 0) {
         return std::make_pair(getScore(board, 'O'), NO_MOVE);
+    } else if (!train) {
+        auto table = getTable();
+        auto it = table.find(board.currentGame);
+        if (it != table.end() && it->second.first >= depth) {
+            return std::make_pair(it->second.second.first, it->second.second.second);
+        }
     }
     Board updated = board;
     char player = maximizingPlayer ? 'X' : 'O';
