@@ -3,8 +3,8 @@
 #include <vector>
 #include <iostream>
 #include "./board.hpp"
-#define minimaxDepth 6 // higher -> more diffuclt
-#define threshold  10 // lower -> more diffuclt
+#define minimaxDepth 6
+#define threshold 3
 #define NUM_COLUMNS 7
 #define NUM_ROWS 8
 #define NO_MOVE -1

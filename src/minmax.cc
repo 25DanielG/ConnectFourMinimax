@@ -22,6 +22,7 @@ const std::string file_path = "transposition_table.txt";
 std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
     int bestScore = INT_MIN;
     int bestMove = NO_MOVE;
+    // Iterative deepening
     for (int depth = 1; depth <= maxDepth; ++depth) {
         auto table = getTable();
         auto it = table.find(board.currentGame);
@@ -69,6 +70,7 @@ std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
 
 std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta) {
     if (depth == 0) {
+        // Quiescence
         int score = getScore(board, 'O');
         if (abs(score) < threshold) {
             return quiescence(board, alpha, beta);
@@ -89,7 +91,7 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
         return std::make_pair(maximizingPlayer ? INT32_MAX : INT32_MIN, blockMove.second[0]);
     }
     std::pair<int, int> ret = maximizingPlayer ? std::make_pair(INT16_MIN, NO_MOVE) : std::make_pair(INT16_MAX, NO_MOVE);
-    // updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
+    // Move ordering
     std::vector<std::pair<Board, std::pair<int, int> > > moves;
     for (unsigned int i = 0; i < NUM_COLUMNS; ++i) {
         if(!canUpdateBoard(board.currentGame, i)) continue;
@@ -114,6 +116,9 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
             beta = std::min(beta, ret.first);
         }
         if(alpha >= beta) break;
+    }
+    if(ret.second == -1) {
+        add(board.currentGame, depth, ret.first, ret.second);
     }
     return ret;
 }
@@ -203,7 +208,7 @@ int scoreBoard(Board board, const char givenPlayer, const char assignedPlayer) {
     score -= numInEdge;
     score += numConnectTwo * 5;
     score += numConnectThree * 20;
-    score += numEmpty * 0.1;
+    // score += numEmpty * 0.1;
     if (givenPlayer == assignedPlayer)
         score += numPossibleWins * 10000;
     else
