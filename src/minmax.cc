@@ -7,7 +7,6 @@
 #include <boost/bind.hpp>
 #include <algorithm>
 #include <iostream>
-#include <pthread.h>
 #include <queue>
 #include <stdint.h>
 #include <string>
@@ -17,7 +16,6 @@ using std::cerr;
 using std::cout;
 using std::endl;
 
-bool train = false;
 const int NUM_THREADS = 8;
 const std::string file_path = "transposition_table.txt";
 
@@ -157,23 +155,6 @@ void performMove(Board gameBoard) {
         save(getTable(), file_path);
         endGame();
         return;
-    }
-}
-
-void trainComputer(int train_depth) {
-    train = true;
-    Board game;
-    while (true) {
-        game.computeBoard();
-        game.printBoard();
-        std::vector<std::vector<char> > matrix = game.getMatrixBoard();
-        if (isGameDone(matrix, 'X').size() > 0 || isGameDone(matrix, 'O').size() > 0) {
-            cout << "Game Ended" << endl;
-            // save(file_path);
-            return;
-        }
-        int nextMove = threading(game, train_depth, INT16_MIN, INT16_MAX).second;
-        game.currentGame += std::to_string(nextMove);
     }
 }
 

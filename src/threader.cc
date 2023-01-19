@@ -1,5 +1,4 @@
 #include <boost/thread.hpp>
-#include <pthread.h>
 #include <iostream>
 #include <queue>
 #include <chrono>
