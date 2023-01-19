@@ -41,4 +41,5 @@ bool containedConnect(coordDirection connected, bool type, std::vector<std::vect
 std::vector<winInfo> possibleWin(const Board board, const int rows, const int columns, const char givenPlayer); // Finds a possible win
 std::vector<coordDirection> findConnectFours(const std::vector<std::vector<char> > &board, const std::vector<coordDirection> &connectThrees, const int rows, const int columns, const char givenPlayer); // Finds wins in the board
 bool canUpdateBoard(const std::string game, const int toUpdate); // Checks if you can add a number to a current game; prevents segmentation faults
+bool sortFunc(std::pair<Board, std::pair<int, int> > a, std::pair<Board, std::pair<int, int> > b); // Sort function for std::sort
 #endif

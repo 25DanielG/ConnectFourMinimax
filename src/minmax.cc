@@ -89,21 +89,27 @@ std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer,
         return std::make_pair(maximizingPlayer ? INT32_MAX : INT32_MIN, blockMove.second[0]);
     }
     std::pair<int, int> ret = maximizingPlayer ? std::make_pair(INT16_MIN, NO_MOVE) : std::make_pair(INT16_MAX, NO_MOVE);
-    updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
-    for(unsigned int i = 0; i < NUM_COLUMNS; ++i) {
+    // updated.currentGame += "9"; // Add the last character, 9 to throw segmentation fault if not overriden
+    std::vector<std::pair<Board, std::pair<int, int> > > moves;
+    for (unsigned int i = 0; i < NUM_COLUMNS; ++i) {
         if(!canUpdateBoard(board.currentGame, i)) continue;
-        updated.currentGame[updated.currentGame.length() - 1] = i + '0'; // Override last character
-        int compValue = (minimax(updated, depth - 1, !maximizingPlayer, alpha, beta)).first;
+        Board updated = board;
+        updated.currentGame += (i + '0');
+        moves.push_back(std::make_pair(updated, std::make_pair(getScore(updated, 'O'), i)));
+    }
+    std::sort(moves.begin(), moves.end(), sortFunc);
+    for(auto move : moves) {
+        int compValue = (minimax(move.first, depth - 1, !maximizingPlayer, alpha, beta)).first;
         if(maximizingPlayer) {
             if(compValue >= ret.first) {
                 ret.first = compValue;
-                ret.second = i;
+                ret.second = move.second.second;
             }
             alpha = std::max(alpha, ret.first);
         } else {
             if(compValue <= ret.first) {
                 ret.first = compValue;
-                ret.second = i;
+                ret.second = move.second.second;
             }
             beta = std::min(beta, ret.first);
         }
@@ -456,4 +462,8 @@ bool canUpdateBoard(const std::string game, const int toUpdate) {
             ++cnt;
     }
     return cnt < 6;
+}
+
+bool sortFunc(std::pair<Board, std::pair<int, int> > a, std::pair<Board, std::pair<int, int> > b) {
+    return a.second.first > b.second.first;
 }
