@@ -20,6 +20,16 @@ const int NUM_THREADS = 8;
 const std::string file_path = "transposition_table.txt";
 
 std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
+    char computer = 'O';
+    auto blockMove = aboutToWin(board, computer);
+    if (blockMove.first) {
+        return std::make_pair(INT32_MAX, blockMove.second[0]);
+    }
+    char player = 'X';
+    blockMove = aboutToWin(board, player);
+    if (blockMove.first) {
+        return std::make_pair(INT32_MAX, blockMove.second[0]);
+    }
     int bestScore = INT_MIN;
     int bestMove = NO_MOVE;
     // Iterative deepening
@@ -32,7 +42,6 @@ std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
             return std::make_pair(bestScore, bestMove);
         }
         boost::thread_group threads;
-        char computer = 'O';
         auto blockMove = aboutToWin(board, computer);
         if (blockMove.first) {
             return std::make_pair(INT32_MAX, blockMove.second[0]);
@@ -56,8 +65,8 @@ std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
             if (result.first >= max.first)
                 max = result;
         }
-        if(max.second == -1) {
-            max = std::make_pair(0, results->at(0).second);
+        if(max.second == NO_MOVE) {
+            max = results->at(0);
         } else {
             add(board.currentGame, depth, max.first, max.second);
         }
@@ -69,7 +78,7 @@ std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
 }
 
 std::pair<int, int> minimax(Board board, const int depth, bool maximizingPlayer, int alpha, int beta) {
-    if (depth == 0) {
+    if (depth == 0 || board.currentGame.length() >= NUM_COLUMNS * NUM_ROWS) {
         // Quiescence
         int score = getScore(board, 'O');
         if (abs(score) < threshold) {
@@ -148,6 +157,7 @@ void performMove(Board gameBoard) {
     gameBoard.computeBoard();
     std::pair<int, int> nextMove = threading(gameBoard, minimaxDepth, INT16_MIN, INT16_MAX);
     gameBoard.currentGame += std::to_string(nextMove.second);
+    std::cerr << "Returned: " << nextMove.second << std::endl;
     std::vector<std::vector<char> > matrix = gameBoard.getMatrixBoard();
     updateBoard(gameBoard);
     cerr << endl << "SCORE: " << nextMove.first << endl << endl;
