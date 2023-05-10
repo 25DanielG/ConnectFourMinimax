@@ -17,7 +17,7 @@ using std::cout;
 using std::endl;
 
 const int NUM_THREADS = 8;
-const std::string file_path = "transposition_table.txt";
+const std::string file_path = "transposition_table.bin";
 
 std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
     char computer = 'O';
@@ -66,6 +66,7 @@ std::pair<int, int> threading(Board board, int maxDepth, int alpha, int beta) {
                 max = result;
         }
         if(max.second == NO_MOVE) {
+            cerr << "going to return -1 change to: " << results->at(0).second << endl;
             max = results->at(0);
         } else {
             add(board.currentGame, depth, max.first, max.second);
